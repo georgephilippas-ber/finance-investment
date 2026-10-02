@@ -2,14 +2,12 @@ import json
 import os
 from contextlib import closing
 from pathlib import Path
+from sqlite3 import connect
 from typing import Optional, List, Dict
 
-import pandas as pd
 import requests
-
-from sqlite3 import connect
-
 from dotenv import load_dotenv
+from pandas import DataFrame, read_sql_query
 
 if __package__:
     from .configuration import CACHE_DIRECTORY
@@ -116,10 +114,10 @@ def create_exchanges_database(load_from_cache: bool = True) -> Path:
     return filename_
 
 
-def read_exchanges_database() -> pd.DataFrame:
+def read_exchanges_database() -> DataFrame:
     filename_ = Path(__file__).resolve().parents[2] / "domain" / "exchanges" / "exchanges.sqlite"
     with closing(connect(f"{filename_.as_uri()}?mode=ro", uri=True)) as connection_:
-        return pd.read_sql_query("SELECT * FROM exchanges", connection_)
+        return read_sql_query("SELECT * FROM exchanges", connection_)
 
 
 if __name__ == "__main__":
