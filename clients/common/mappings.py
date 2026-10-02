@@ -1,12 +1,14 @@
 from ib_async import Contract
 
-from clients.eodhd.client import load_dotenv
+from clients.eodhd.client import load_dotenv, get_symbols_by_isin, get_symbols_by_ticker
 
 if __name__ == "__main__":
     from ib_async import IB
 
     load_dotenv()
 
+    print(get_symbols_by_ticker("MSFT", eodhd_code="AS"))
+    print(get_symbols_by_isin("XS2337100320", currency="EUR"))
     # print(get_symbols_by_ticker("AMZN", eodhd_code='us'))
 
     ib = IB()

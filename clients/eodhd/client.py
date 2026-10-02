@@ -274,10 +274,4 @@ def get_symbols_in_exchange(exchange: str, load_from_cache: bool = True) -> List
 
 
 if __name__ == "__main__":
-    load_dotenv(Path(__file__).resolve().parents[2] / ".env")
-
-    print(api_key())
-    # create_exchanges_database()
-
-    print(get_symbols_by_ticker("MSFT", eodhd_code="AS"))
-    print(get_symbols_by_isin("XS2337100320", currency="EUR"))
+    pass
