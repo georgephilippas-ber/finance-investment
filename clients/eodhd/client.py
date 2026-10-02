@@ -152,7 +152,7 @@ def _resolve_symbol(
     return ticker if ticker.endswith(f".{eodhd_code}") else f"{ticker}.{eodhd_code}"
 
 
-def get_symbol(
+def get_symbols_by_ticker(
         ticker: str,
         *,
         operating_mic: Optional[str] = None,
@@ -184,7 +184,40 @@ def get_symbol(
     ]
 
 
-def get_symbols(exchange: str, load_from_cache: bool = True) -> List[Symbol]:
+def get_symbols_by_isin(isin: str, *, currency: str) -> List[Symbol]:
+    isin = isin.strip().upper()
+    currency = currency.strip().upper()
+    if not isin or not currency:
+        raise ValueError("Provide an ISIN and trading currency.")
+
+    response = requests.get(
+        f"https://eodhd.com/api/search/{isin}",
+        params={"limit": 500, "fmt": "json", "api_token": api_key()},
+        timeout=30,
+    )
+    response.raise_for_status()
+    records_ = response.json()
+    if not isinstance(records_, list) or not all(isinstance(record_, dict) for record_ in records_):
+        raise ValueError("EODHD returned an invalid search response.")
+    if len(records_) == 500:
+        raise LookupError("EODHD search reached its result limit; the listing list may be incomplete.")
+
+    return [
+        Symbol(
+            code=record_["Code"],
+            name=record_["Name"],
+            country=record_["Country"],
+            exchange=record_["Exchange"],
+            currency=record_["Currency"],
+            type=record_["Type"],
+            isin=record_["ISIN"],
+        )
+        for record_ in records_
+        if record_.get("ISIN") == isin and record_.get("Currency") == currency
+    ]
+
+
+def get_symbols_in_exchange(exchange: str, load_from_cache: bool = True) -> List[Symbol]:
     exchange = exchange.strip().upper()
 
     if not exchange:
@@ -246,4 +279,5 @@ if __name__ == "__main__":
     print(api_key())
     # create_exchanges_database()
 
-    print(get_symbol("MSFT", eodhd_code="LSE"))
+    print(get_symbols_by_ticker("MSFT", eodhd_code="AS"))
+    print(get_symbols_by_isin("XS2337100320", "EUR"))
