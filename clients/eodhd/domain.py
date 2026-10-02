@@ -3,10 +3,11 @@ from typing import Optional
 
 
 @dataclass
-class IdentifierMapping:
-    symbol: str
+class Symbol:
+    code: str
+    name: str
+    country: str
+    exchange: str
+    currency: str
+    type: str
     isin: Optional[str]
-    figi: Optional[str]
-    lei: Optional[str]
-    cusip: Optional[str]
-    cik: Optional[str]

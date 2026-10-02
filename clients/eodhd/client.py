@@ -8,14 +8,13 @@ from typing import Optional, List, Dict
 import requests
 from dotenv import load_dotenv
 from pandas import DataFrame, read_sql_query
-from rapidfuzz import fuzz, process, utils
 
 if __package__:
     from .configuration import CACHE_DIRECTORY
-    from .domain import IdentifierMapping
+    from .domain import Symbol
 else:
     from configuration import CACHE_DIRECTORY
-    from domain import IdentifierMapping
+    from domain import Symbol
 
 
 def api_key() -> str:
@@ -123,84 +122,70 @@ def read_exchanges_database() -> DataFrame:
         return read_sql_query("SELECT * FROM exchanges", connection_)
 
 
-def get_identifier_mapping(ticker: str, *, query: str) -> IdentifierMapping:
+def _resolve_symbol(
+        ticker: str,
+        *,
+        operating_mic: Optional[str] = None,
+        eodhd_code: Optional[str] = None,
+) -> str:
     ticker = ticker.strip().upper()
-    query = query.strip()
+    operating_mic = operating_mic.strip().upper() if operating_mic is not None else None
+    eodhd_code = eodhd_code.strip().upper() if eodhd_code is not None else None
+
     if not ticker:
         raise ValueError("ticker must not be blank.")
-    if not query:
-        raise ValueError("query must not be blank.")
+    if not operating_mic and not eodhd_code:
+        raise ValueError("Provide operating_mic or eodhd_code.")
 
-    exchanges_ = read_exchanges_database()
-    matches_ = exchanges_.loc[exchanges_["operating_mic"] == query.upper()]
-    if matches_.empty:
-        matches_ = exchanges_.loc[exchanges_["eodhd_code"] == query.upper()]
-    if matches_.empty:
-        candidates_ = process.extract(
-            query,
-            exchanges_["name"],
-            scorer=fuzz.WRatio,
-            processor=utils.default_process,
-            score_cutoff=80,
-            limit=None,
-        )
-        if candidates_:
-            best_score_ = candidates_[0][1]
-            indices_ = [
-                index_ for _, score_, index_ in candidates_
-                if score_ >= best_score_ - 5
-            ]
-            matches_ = exchanges_.loc[indices_]
-    if matches_.empty:
-        raise LookupError(f"No exchange matches query: {query}")
+    if operating_mic:
+        exchanges_ = read_exchanges_database()
+        codes_ = exchanges_.loc[exchanges_["operating_mic"] == operating_mic, "eodhd_code"]
+        if codes_.empty:
+            raise LookupError(f"Unknown OperatingMIC: {operating_mic}")
+        code_ = codes_.iloc[0]
+        if eodhd_code and eodhd_code != code_:
+            raise ValueError("operating_mic and eodhd_code refer to different EODHD exchanges.")
+        eodhd_code = code_
 
-    codes_ = matches_["eodhd_code"].unique()
-    if len(codes_) != 1:
-        choices_ = ", ".join(sorted(codes_))
-        raise LookupError(f"Exchange query is ambiguous. Matching EODHD codes: {choices_}")
-    eodhd_code = codes_[0]
+    return ticker if ticker.endswith(f".{eodhd_code}") else f"{ticker}.{eodhd_code}"
 
-    symbol_ = ticker if ticker.endswith(f".{eodhd_code}") else f"{ticker}.{eodhd_code}"
+
+def get_symbol(
+        ticker: str,
+        *,
+        operating_mic: Optional[str] = None,
+        eodhd_code: Optional[str] = None,
+) -> List[Symbol]:
+    symbol_ = _resolve_symbol(ticker, operating_mic=operating_mic, eodhd_code=eodhd_code)
+    ticker_, _, exchange_ = symbol_.rpartition(".")
+
     response = requests.get(
-        "https://eodhd.com/api/id-mapping",
-        params={"filter[symbol]": symbol_, "fmt": "json", "api_token": api_key()},
+        f"https://eodhd.com/api/exchange-symbol-list/{exchange_}",
+        params={"symbols": ticker_, "fmt": "json", "api_token": api_key()},
         timeout=30,
     )
     response.raise_for_status()
-    response_ = response.json()
-    records_ = response_.get("data") if isinstance(response_, dict) else None
-    if not isinstance(records_, list) or not all(
-            isinstance(record_, dict) and isinstance(record_.get("symbol"), str)
-            for record_ in records_
-    ):
-        raise ValueError("EODHD returned an invalid identifier mapping response.")
-
-    matches_ = [record_ for record_ in records_ if record_["symbol"].upper() == symbol_]
-    if not matches_:
-        raise LookupError(f"No identifier mapping found for {symbol_}.")
-    if len(matches_) != 1:
-        raise LookupError(f"Multiple identifier mappings found for {symbol_}.")
-
-    record_ = matches_[0]
-    for field_ in ("isin", "figi", "lei", "cusip", "cik"):
-        value_ = record_.get(field_)
-        if value_ is not None and not isinstance(value_, str):
-            raise ValueError(f"EODHD returned an invalid {field_} for {symbol_}.")
-
-    return IdentifierMapping(
-        symbol=record_["symbol"],
-        isin=record_.get("isin"),
-        figi=record_.get("figi"),
-        lei=record_.get("lei"),
-        cusip=record_.get("cusip"),
-        cik=record_.get("cik"),
-    )
+    records_ = response.json()
+    if not isinstance(records_, list) or not all(isinstance(record_, dict) for record_ in records_):
+        raise ValueError("EODHD returned an invalid symbol response.")
+    return [
+        Symbol(
+            code=record_["Code"],
+            name=record_["Name"],
+            country=record_["Country"],
+            exchange=record_["Exchange"],
+            currency=record_["Currency"],
+            type=record_["Type"],
+            isin=record_.get("Isin"),
+        )
+        for record_ in records_
+    ]
 
 
 if __name__ == "__main__":
     load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
-    # print(api_key())
+    print(api_key())
     # create_exchanges_database()
 
-    print(get_identifier_mapping("MSFT", query="London"))
+    print(get_symbol("MSFT", eodhd_code="LSE"))

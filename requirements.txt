@@ -3,5 +3,3 @@ requests
 pandas
 bt
 python-dotenv
-
-rapidfuzz
