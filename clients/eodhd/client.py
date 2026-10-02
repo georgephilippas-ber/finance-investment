@@ -14,7 +14,7 @@ if __package__:
     from .domain import Symbol
 else:
     from configuration import CACHE_DIRECTORY
-    from domain import Symbol
+    from clients.eodhd.domain import Symbol
 
 
 def api_key() -> str:
