@@ -11,3 +11,14 @@ class Symbol:
     currency: str
     type: str
     isin: Optional[str]
+
+
+@dataclass
+class EodCandle:
+    date: str
+    open: float
+    high: float
+    low: float
+    close: float
+    adjusted_close: float
+    volume: int

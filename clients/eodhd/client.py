@@ -11,10 +11,10 @@ from pandas import DataFrame, read_sql_query
 
 if __package__:
     from .configuration import CACHE_DIRECTORY
-    from .domain import Symbol
+    from .domain import EodCandle, Symbol
 else:
     from configuration import CACHE_DIRECTORY
-    from clients.eodhd.domain import Symbol
+    from clients.eodhd.domain import EodCandle, Symbol
 
 
 def api_key() -> str:
@@ -247,4 +247,3 @@ if __name__ == "__main__":
     # create_exchanges_database()
 
     print(get_symbol("MSFT", eodhd_code="LSE"))
-    print(get_symbols("GBOND"))
