@@ -120,6 +120,12 @@ def read_exchanges_database() -> DataFrame:
         return read_sql_query("SELECT * FROM exchanges", connection_)
 
 
+def lookup(ticker: str, *, operating_mic: Optional[str], eodhd_code: Optional[str]):
+    pass
+
+
+# https://eodhd.com/api/id-mapping?filter[symbol]=AAPL.US&fmt=json&api_token=63ece8b64d25d2.46009852
+
 if __name__ == "__main__":
     load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 

@@ -15,4 +15,3 @@ if __name__ == "__main__":
 
     for detail in details:
         print(detail)
-        # print(detail.validExchanges.split(","))
