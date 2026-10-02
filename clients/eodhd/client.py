@@ -11,10 +11,10 @@ from pandas import DataFrame, read_sql_query
 
 if __package__:
     from .configuration import CACHE_DIRECTORY
-    from .domain import EodCandle, Symbol
+    from .domain import EODCandle, Symbol
 else:
     from configuration import CACHE_DIRECTORY
-    from clients.eodhd.domain import EodCandle, Symbol
+    from clients.eodhd.domain import EODCandle, Symbol
 
 
 def api_key() -> str:

@@ -14,7 +14,7 @@ class Symbol:
 
 
 @dataclass
-class EodCandle:
+class EODCandle:
     date: str
     open: float
     high: float
