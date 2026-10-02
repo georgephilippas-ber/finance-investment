@@ -22,4 +22,4 @@ if __name__ == "__main__":
 
     details = ib.reqContractDetails(contract)
 
-    print(details[0])
+    print(details)
