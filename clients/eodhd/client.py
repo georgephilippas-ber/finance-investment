@@ -8,6 +8,7 @@ from typing import Optional, List, Dict
 import requests
 from dotenv import load_dotenv
 from pandas import DataFrame, read_sql_query
+from rapidfuzz import fuzz, process, utils
 
 if __package__:
     from .configuration import CACHE_DIRECTORY
@@ -122,30 +123,42 @@ def read_exchanges_database() -> DataFrame:
         return read_sql_query("SELECT * FROM exchanges", connection_)
 
 
-def get_identifier_mapping(
-        ticker: str,
-        *,
-        operating_mic: Optional[str] = None,
-        eodhd_code: Optional[str] = None,
-) -> IdentifierMapping:
+def get_identifier_mapping(ticker: str, *, query: str) -> IdentifierMapping:
     ticker = ticker.strip().upper()
-    eodhd_code = eodhd_code.strip().upper() if eodhd_code is not None else None
-    operating_mic = operating_mic.strip().upper() if operating_mic is not None else None
-
+    query = query.strip()
     if not ticker:
         raise ValueError("ticker must not be blank.")
-    if not operating_mic and not eodhd_code:
-        raise ValueError("Provide operating_mic or eodhd_code.")
+    if not query:
+        raise ValueError("query must not be blank.")
 
-    if operating_mic:
-        exchanges_ = read_exchanges_database()
-        matches_ = exchanges_.loc[exchanges_["operating_mic"] == operating_mic, "eodhd_code"]
-        if matches_.empty:
-            raise LookupError(f"Unknown OperatingMIC: {operating_mic}")
-        code_ = matches_.iloc[0]
-        if eodhd_code and eodhd_code != code_:
-            raise ValueError("operating_mic and eodhd_code refer to different EODHD exchanges.")
-        eodhd_code = code_
+    exchanges_ = read_exchanges_database()
+    matches_ = exchanges_.loc[exchanges_["operating_mic"] == query.upper()]
+    if matches_.empty:
+        matches_ = exchanges_.loc[exchanges_["eodhd_code"] == query.upper()]
+    if matches_.empty:
+        candidates_ = process.extract(
+            query,
+            exchanges_["name"],
+            scorer=fuzz.WRatio,
+            processor=utils.default_process,
+            score_cutoff=80,
+            limit=None,
+        )
+        if candidates_:
+            best_score_ = candidates_[0][1]
+            indices_ = [
+                index_ for _, score_, index_ in candidates_
+                if score_ >= best_score_ - 5
+            ]
+            matches_ = exchanges_.loc[indices_]
+    if matches_.empty:
+        raise LookupError(f"No exchange matches query: {query}")
+
+    codes_ = matches_["eodhd_code"].unique()
+    if len(codes_) != 1:
+        choices_ = ", ".join(sorted(codes_))
+        raise LookupError(f"Exchange query is ambiguous. Matching EODHD codes: {choices_}")
+    eodhd_code = codes_[0]
 
     symbol_ = ticker if ticker.endswith(f".{eodhd_code}") else f"{ticker}.{eodhd_code}"
     response = requests.get(
@@ -190,4 +203,4 @@ if __name__ == "__main__":
     # print(api_key())
     # create_exchanges_database()
 
-    print(get_identifier_mapping("AAPL", operating_mic="XNAS"))
+    print(get_identifier_mapping("MSFT", query="London"))
