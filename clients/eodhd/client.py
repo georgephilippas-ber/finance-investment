@@ -184,6 +184,62 @@ def get_symbol(
     ]
 
 
+def get_symbols(exchange: str, load_from_cache: bool = True) -> List[Symbol]:
+    exchange = exchange.strip().upper()
+
+    if not exchange:
+        raise ValueError()
+
+    exchanges_ = read_exchanges_database()
+    matches_ = exchanges_.loc[exchanges_["operating_mic"].str.upper() == exchange]
+    if matches_.empty:
+        matches_ = exchanges_.loc[exchanges_["eodhd_code"].str.upper() == exchange]
+    if matches_.empty:
+        raise LookupError()
+
+    codes_ = matches_["eodhd_code"].unique()
+    if len(codes_) != 1:
+        raise ValueError()
+
+    eodhd_code = codes_[0]
+    filename_ = CACHE_DIRECTORY / f"symbols_{eodhd_code}.json"
+    if load_from_cache and filename_.is_file():
+        with filename_.open(encoding="utf-8") as file_:
+            records_ = json.load(file_)
+    else:
+        response = requests.get(
+            f"https://eodhd.com/api/exchange-symbol-list/{eodhd_code}",
+            params={"fmt": "json", "api_token": api_key()},
+            timeout=30,
+        )
+        response.raise_for_status()
+        records_ = response.json()
+
+    if not isinstance(records_, list) or not all(isinstance(record_, dict) for record_ in records_):
+        raise ValueError()
+
+    symbols_ = [
+        Symbol(
+            code=record_["Code"],
+            name=record_["Name"],
+            country=record_["Country"],
+            exchange=record_["Exchange"],
+            currency=record_["Currency"],
+            type=record_["Type"],
+            isin=record_.get("Isin"),
+        )
+        for record_ in records_
+    ]
+
+    if not load_from_cache or not filename_.is_file():
+        CACHE_DIRECTORY.mkdir(parents=True, exist_ok=True)
+        with filename_.open("w", encoding="utf-8") as file_:
+            json.dump(records_, file_, indent=2)
+            file_.write("\n")
+
+    return symbols_
+
+
 if __name__ == "__main__":
     load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
@@ -191,3 +247,4 @@ if __name__ == "__main__":
     # create_exchanges_database()
 
     print(get_symbol("MSFT", eodhd_code="LSE"))
+    print(get_symbols("GBOND"))
