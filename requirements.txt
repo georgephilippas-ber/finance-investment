@@ -2,3 +2,4 @@ ib_async
 requests
 pandas
 bt
+python-dotenv

@@ -1,0 +1,22 @@
+{
+  "XNAS": {
+    "Name": "NASDAQ - All Markets",
+    "Country": "USA",
+    "Currency": "USD"
+  },
+  "XNYS": {
+    "Name": "New York Stock Exchange, Inc.",
+    "Country": "USA",
+    "Currency": "USD"
+  },
+  "OTCM": {
+    "Name": "OTC Link ATS - OTC Markets",
+    "Country": "USA",
+    "Currency": "USD"
+  },
+  "XCBO": {
+    "Name": "CBOE Global Markets Inc.",
+    "Country": "USA",
+    "Currency": "USD"
+  }
+}
