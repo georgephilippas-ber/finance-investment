@@ -2,7 +2,7 @@ import json
 import os
 from contextlib import closing
 from pathlib import Path
-from sqlite3 import connect
+from sqlite3 import connect, Connection
 from typing import Optional, List, Dict
 
 import requests
@@ -90,17 +90,18 @@ def create_exchanges_database(load_from_cache: bool = True) -> Path:
     directory_.mkdir(parents=True, exist_ok=True)
     filename_ = directory_ / "exchanges.sqlite"
 
-    with closing(connect(filename_)) as connection_, connection_:
+    with closing[Connection](connect(filename_)) as connection_, connection_:
         connection_.execute("BEGIN")
-        connection_.execute("""
-            CREATE TABLE IF NOT EXISTS exchanges (
-                operating_mic TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL,
-                country TEXT NOT NULL,
-                currency TEXT NOT NULL,
-                eodhd_code TEXT NOT NULL
-            )
-        """)
+        connection_.execute(
+            """
+                CREATE TABLE IF NOT EXISTS exchanges (
+                    operating_mic TEXT PRIMARY KEY NOT NULL,
+                    name TEXT NOT NULL,
+                    country TEXT NOT NULL,
+                    currency TEXT NOT NULL,
+                    eodhd_code TEXT NOT NULL
+                )
+            """)
         columns_ = {column_[1] for column_ in connection_.execute("PRAGMA table_info(exchanges)")}
         if "eodhd_code" not in columns_:
             connection_.execute(
