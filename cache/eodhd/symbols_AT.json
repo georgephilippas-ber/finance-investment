@@ -1,0 +1,1298 @@
+[
+  {
+    "Code": "AAAK",
+    "Name": "Wool Industry Tria Alfa S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS059063008"
+  },
+  {
+    "Code": "ACAG",
+    "Name": "Austriacard Holdings AG",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "ADMIE",
+    "Name": "Admie Holding S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS518003009"
+  },
+  {
+    "Code": "ADPS",
+    "Name": "ATTICA DPS",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "AEGN",
+    "Name": "Aegean Airlines S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS495003006"
+  },
+  {
+    "Code": "AEM",
+    "Name": "AEM",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "AETF",
+    "Name": "ALPHA ETF FTSE Athex Large Cap Equity UCITS",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "ETF",
+    "Isin": null
+  },
+  {
+    "Code": "AIA",
+    "Name": "ATHENS INTERNATIONAL AIRPORT S.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS536003007"
+  },
+  {
+    "Code": "AKTR",
+    "Name": "AKTR",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "ALMY",
+    "Name": "Alumil Aluminium Industry S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS289103004"
+  },
+  {
+    "Code": "ALPHA",
+    "Name": "Alpha Bank S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS015003007"
+  },
+  {
+    "Code": "ALWN",
+    "Name": "Allwyn AG",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "ANDRO",
+    "Name": "Alpha Trust Andromeda Investment Trust S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS433003019"
+  },
+  {
+    "Code": "ASCO",
+    "Name": "As Commercial Industrial Company of Computers and Toys S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS404003006"
+  },
+  {
+    "Code": "ASTAK",
+    "Name": "Alpha Astika Akinita S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS331043000"
+  },
+  {
+    "Code": "ATEK",
+    "Name": "Attica Publications S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS340263003"
+  },
+  {
+    "Code": "ATTICA",
+    "Name": "Attica Holdings S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS144003001"
+  },
+  {
+    "Code": "AVAX",
+    "Name": "Avax S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS213213002"
+  },
+  {
+    "Code": "AVE",
+    "Name": "AVE S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS489003004"
+  },
+  {
+    "Code": "BELA",
+    "Name": "Jumbo S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS282183003"
+  },
+  {
+    "Code": "BIOKA",
+    "Name": "Biokarpet S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS165063009"
+  },
+  {
+    "Code": "BIOSK",
+    "Name": "Unibios Holdings S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS084003011"
+  },
+  {
+    "Code": "BLEKEDROS",
+    "Name": "BLE Kedros R.E.I.C.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "BOCHGR",
+    "Name": "BOCHGR",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "IE00BD5B1Y92"
+  },
+  {
+    "Code": "BRIQ",
+    "Name": "BriQ Properties Real Estate Investment Company",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS517003000"
+  },
+  {
+    "Code": "BYLOT",
+    "Name": "Ballys Intralot S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "CAIROMEZ",
+    "Name": "Cairo Mezz PLC",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "CENER",
+    "Name": "Cenergy Holdings SA",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "BE0974303357"
+  },
+  {
+    "Code": "CENTR",
+    "Name": "Centric Holdings S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS449003003"
+  },
+  {
+    "Code": "CNLCAP",
+    "Name": "CNL Capital EKES-AIFM",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "CPI",
+    "Name": "CPI Computer Peripherals International",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS413313008"
+  },
+  {
+    "Code": "CREDIA",
+    "Name": "CrediaBank S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "DAIOS",
+    "Name": "Daios Plastics S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS382073005"
+  },
+  {
+    "Code": "DIMAND",
+    "Name": "Dimand S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS525003000"
+  },
+  {
+    "Code": "DOMIK",
+    "Name": "Domiki Kritis S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS364253005"
+  },
+  {
+    "Code": "DOPPLER",
+    "Name": "Doppler S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "DROME",
+    "Name": "Dromeas SA",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS412503005"
+  },
+  {
+    "Code": "EEE",
+    "Name": "Coca-Cola HBC AG",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "CH0198251305"
+  },
+  {
+    "Code": "EIS",
+    "Name": "European Innovation Solutions S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "EKTER",
+    "Name": "Ekter SA",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS222213001"
+  },
+  {
+    "Code": "ELBE",
+    "Name": "Elve S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS240003012"
+  },
+  {
+    "Code": "ELHA",
+    "Name": "Elvalhalcor Hellenic Copper and Aluminium Industry S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS281003004"
+  },
+  {
+    "Code": "ELIN",
+    "Name": "Elinoil Hellenic Petroleum Company S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS477003008"
+  },
+  {
+    "Code": "ELLAKTOR",
+    "Name": "Ellaktor S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS191213008"
+  },
+  {
+    "Code": "ELPE",
+    "Name": "Hellenic Petroleum S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS298343005"
+  },
+  {
+    "Code": "ELSTR",
+    "Name": "Elastron S.A. - Steel Service Centers",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS088003017"
+  },
+  {
+    "Code": "ELTON",
+    "Name": "Elton International Trading Company S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS397003005"
+  },
+  {
+    "Code": "ETE",
+    "Name": "National Bank of Greece S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS003003035"
+  },
+  {
+    "Code": "EUROB",
+    "Name": "Eurobank Ergasias Services and Holdings S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS829003003"
+  },
+  {
+    "Code": "EVR",
+    "Name": "EVR",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "EVROF",
+    "Name": "Evrofarma SA",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS385113006"
+  },
+  {
+    "Code": "EXAE",
+    "Name": "Hellenic Exchanges - Athens Stock Exchange SA",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS395363005"
+  },
+  {
+    "Code": "EYAPS",
+    "Name": "Thessaloniki Water Supply & Sewerage Co S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS428003008"
+  },
+  {
+    "Code": "EYDAP",
+    "Name": "Athens Water Supply and Sewerage Company S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS359353000"
+  },
+  {
+    "Code": "FAIS",
+    "Name": "FAIS HOLDING S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "FLEXO",
+    "Name": "Flexopack Soci\u00e9t\u00e9 Anonyme Commercial and Industrial Plastics Company",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS259003002"
+  },
+  {
+    "Code": "FOODL",
+    "Name": "Foodlink A.E",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "FOYRK",
+    "Name": "Fourlis Holdings S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS096003009"
+  },
+  {
+    "Code": "FRIGO",
+    "Name": "Frigoglass S.A.I.C.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS346003007"
+  },
+  {
+    "Code": "GCMEZZ",
+    "Name": "Galaxy Cosmos Mezz PLC",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "GEBKA",
+    "Name": "General Commercial & Industrial S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS137003000"
+  },
+  {
+    "Code": "GEKTERNA",
+    "Name": "GEK TERNA Holdings Real Estate Construction S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS145003000"
+  },
+  {
+    "Code": "HAIDE",
+    "Name": "Haidemenos S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS350263000"
+  },
+  {
+    "Code": "HTO",
+    "Name": "Hellenic Telecommunications Organization S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS260333000"
+  },
+  {
+    "Code": "IATR",
+    "Name": "Athens Medical C.S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS147233001"
+  },
+  {
+    "Code": "IKTIN",
+    "Name": "Iktinos Hellas S.A. Greek Marble Industry Technical and Touristic Company",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS372003004"
+  },
+  {
+    "Code": "ILYDA",
+    "Name": "Ilyda SA",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS475003018"
+  },
+  {
+    "Code": "INKAT",
+    "Name": "Intracom Constructions Societe Anonyme Technical and Steel Constructions",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS432003028"
+  },
+  {
+    "Code": "INLIF",
+    "Name": "Interlife General Insurance S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "INTEK",
+    "Name": "Ideal Group S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS148003015"
+  },
+  {
+    "Code": "INTET",
+    "Name": "Intertech S.A. Inter. Technologies",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "INTRK",
+    "Name": "Intracom Holdings S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS087003000"
+  },
+  {
+    "Code": "KARE",
+    "Name": "Karelia Tobacco Company Inc",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS120131008"
+  },
+  {
+    "Code": "KEKR",
+    "Name": "Kekrops S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS070003009"
+  },
+  {
+    "Code": "KORDE",
+    "Name": "Kordellos Ch. Bros S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS384003000"
+  },
+  {
+    "Code": "KRI",
+    "Name": "Kri-Kri Milk Industry S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS469003024"
+  },
+  {
+    "Code": "KYLO",
+    "Name": "Loulis Mills S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS117123000"
+  },
+  {
+    "Code": "KYSA",
+    "Name": "Flour Mills C. Sarantopoulos S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS118003003"
+  },
+  {
+    "Code": "LAMDA",
+    "Name": "LAMDA Development S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS245213004"
+  },
+  {
+    "Code": "LAMPS",
+    "Name": "Lampsa Hellenic Hotels S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS128003001"
+  },
+  {
+    "Code": "LANAC",
+    "Name": "Lanakam S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS047063003"
+  },
+  {
+    "Code": "LAVI",
+    "Name": "Lavipharm S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS246073001"
+  },
+  {
+    "Code": "LEBEK",
+    "Name": "N. Leventeris S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS090101007"
+  },
+  {
+    "Code": "LEBEP",
+    "Name": "N. Leventeris S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "LOGISMOS",
+    "Name": "Logismos Information Systems S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS461003006"
+  },
+  {
+    "Code": "MASTIHA",
+    "Name": "Mediterra S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "MATHIO",
+    "Name": "Mathios Refractories S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS374003002"
+  },
+  {
+    "Code": "MEDIC",
+    "Name": "Medicon Hellas S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS424003002"
+  },
+  {
+    "Code": "MERKO",
+    "Name": "Mermeren Kombinat AD",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "MEVA",
+    "Name": "Mevaco S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS319103008"
+  },
+  {
+    "Code": "MIG",
+    "Name": "Marfin Investment Group Holdings S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS314003005"
+  },
+  {
+    "Code": "MIN",
+    "Name": "J. & B. Ladenis Bros S.A. - Minerva - Knitwear Manufacturing Company",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "MODA",
+    "Name": "N. Varveris-Moda Bagno S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS375183001"
+  },
+  {
+    "Code": "MOH",
+    "Name": "Motor Oil (Hellas) Corinth Refineries S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS426003000"
+  },
+  {
+    "Code": "MOTO",
+    "Name": "Emporiki Eisagogiki Aftokiniton Ditrohon kai Mihanon Thalassis Societe Anonyme",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS488003005"
+  },
+  {
+    "Code": "MOYZK",
+    "Name": "EL. D. Mouzakis S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS054061007"
+  },
+  {
+    "Code": "MPITR",
+    "Name": "Bitros Holding S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS092103001"
+  },
+  {
+    "Code": "MTLN",
+    "Name": "Metlen Energy & Metals PLC",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "NAKAS",
+    "Name": "Philippos Nakas S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS387503006"
+  },
+  {
+    "Code": "NAYP",
+    "Name": "Nafpaktos Textile Industry S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS265061002"
+  },
+  {
+    "Code": "NOVAL",
+    "Name": "NOVAL PROPERTY REAL ESTATE INVE",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "OLTH",
+    "Name": "Thessaloniki Port Authority SA",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS427003009"
+  },
+  {
+    "Code": "OLYMP",
+    "Name": "Technical Olympic S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS403003007"
+  },
+  {
+    "Code": "ONYX",
+    "Name": "ONYX",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "OPTIMA",
+    "Name": "Optima bank SA",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS533003000"
+  },
+  {
+    "Code": "OPTRON",
+    "Name": "Optronics Technologies S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "ORILINA",
+    "Name": "Orilina Properties REIC S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "OTOEL",
+    "Name": "Autohellas S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS337003008"
+  },
+  {
+    "Code": "PAIR",
+    "Name": "E. Pairis S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS275073005"
+  },
+  {
+    "Code": "PAP",
+    "Name": "Papoutsanis S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS065003014"
+  },
+  {
+    "Code": "PERF",
+    "Name": "Performance Technologies S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "PETRO",
+    "Name": "Petros Petropoulos AEBE",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS345503007"
+  },
+  {
+    "Code": "PLAKR",
+    "Name": "Plastika Kritis S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS326003019"
+  },
+  {
+    "Code": "PLAT",
+    "Name": "Thrace Plastics Holding and Commercial S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS239003007"
+  },
+  {
+    "Code": "PPA",
+    "Name": "Piraeus Port Authority S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS470003013"
+  },
+  {
+    "Code": "PPC",
+    "Name": "Public Power Corporation S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS434003000"
+  },
+  {
+    "Code": "PRD",
+    "Name": "Proodeftiki S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS184003002"
+  },
+  {
+    "Code": "PREMIA",
+    "Name": "Premia S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS497003012"
+  },
+  {
+    "Code": "PRODEA",
+    "Name": "Prodea Real Estate Investment Co.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS509003018"
+  },
+  {
+    "Code": "PROF",
+    "Name": "Profile Systems & Software SA",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS472003011"
+  },
+  {
+    "Code": "PROFK",
+    "Name": "Pipe Works L. Girakian Profil S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS095001004"
+  },
+  {
+    "Code": "PVMEZZ",
+    "Name": "Phoenix Vega Mezz PLC",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "QLCO",
+    "Name": "QUALCO GROUP S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "QUAL",
+    "Name": "Quality & Reliability A.B.E.E",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS396003006"
+  },
+  {
+    "Code": "QUEST",
+    "Name": "Quest Holdings S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS310003009"
+  },
+  {
+    "Code": "REALCONS",
+    "Name": "Real Consulting IT Business Solutions S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "REVOIL",
+    "Name": "Revoil S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS473003002"
+  },
+  {
+    "Code": "SAR",
+    "Name": "Gr. Sarantis S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS204003008"
+  },
+  {
+    "Code": "SB",
+    "Name": "Safe Bulkers, Inc.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "SIDMA",
+    "Name": "Sidma S.A. Steel Products",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS484003009"
+  },
+  {
+    "Code": "SOFTWEB",
+    "Name": "SOFTWEB",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "SPACE",
+    "Name": "Space Hellas SA",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS402003008"
+  },
+  {
+    "Code": "SPIR",
+    "Name": "The House of Agriculture Spiroy S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS284183001"
+  },
+  {
+    "Code": "SUNMEZZ",
+    "Name": "Sunrisemezz PLC",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "TELL",
+    "Name": "Bank of Greece",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS004013009"
+  },
+  {
+    "Code": "TITC",
+    "Name": "Titan Cement International S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "BE0974338700"
+  },
+  {
+    "Code": "TPEIR",
+    "Name": "Piraeus Financial Holdings S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS831003009"
+  },
+  {
+    "Code": "TRASTOR",
+    "Name": "Trastor Real Estate Investment Company SA",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS487003006"
+  },
+  {
+    "Code": "TRESTATES",
+    "Name": "TRESTATES",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS534003009"
+  },
+  {
+    "Code": "VIDAVO",
+    "Name": "VIDAVO S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": null
+  },
+  {
+    "Code": "VIO",
+    "Name": "Viohalco S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "BE0974271034"
+  },
+  {
+    "Code": "VOSYS",
+    "Name": "Vogiatzoglou Systems S.A",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS407183003"
+  },
+  {
+    "Code": "XYLEK",
+    "Name": "Interwood-Xylemporia A.T.E.N.E.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS131003006"
+  },
+  {
+    "Code": "YKNOT",
+    "Name": "Y/KNOT S.A.",
+    "Country": "Greece",
+    "Exchange": "AT",
+    "Currency": "EUR",
+    "Type": "Common Stock",
+    "Isin": "GRS295003008"
+  }
+]

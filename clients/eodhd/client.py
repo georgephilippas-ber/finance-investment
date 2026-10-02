@@ -280,4 +280,6 @@ if __name__ == "__main__":
     # create_exchanges_database()
 
     print(get_symbols_by_ticker("MSFT", eodhd_code="AS"))
-    print(get_symbols_by_isin("XS2337100320", "EUR"))
+    print(get_symbols_by_isin("XS2337100320", currency="EUR"))
+
+    print(get_symbols_in_exchange("AT"))
