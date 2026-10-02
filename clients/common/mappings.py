@@ -1,24 +1,25 @@
-from clients.eodhd.client import get_symbol
+from ib_async import Contract
+
 from clients.eodhd.client import load_dotenv
 
 if __name__ == "__main__":
-    from ib_async import IB, Stock
+    from ib_async import IB
 
     load_dotenv()
 
-    print(get_symbol("AMZN", eodhd_code='us'))
+    # print(get_symbol("AMZN", eodhd_code='us'))
 
     ib = IB()
     ib.connect("127.0.0.1", 4001, clientId=1)
 
-    contract = Stock(
-        "AAPL",
-        # "SMART",
-        # "USD",
-        # primaryExchange="NASDAQ",
+    contract = Contract(
+        # secType="STK",
+        secIdType="ISIN",
+        secId="US0231351067",
+        currency="USD",
+        exchange="SMART",
     )
 
     details = ib.reqContractDetails(contract)
 
-    for detail in details:
-        print(detail)
+    print(details[0])
