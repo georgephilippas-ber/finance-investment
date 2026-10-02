@@ -133,18 +133,19 @@ def _resolve_symbol(
     eodhd_code = eodhd_code.strip().upper() if eodhd_code is not None else None
 
     if not ticker:
-        raise ValueError("ticker must not be blank.")
+        raise ValueError("!ticker")
     if not operating_mic and not eodhd_code:
-        raise ValueError("Provide operating_mic or eodhd_code.")
+        raise ValueError("!operating_mic and !eodhd_code")
 
     if operating_mic:
         exchanges_ = read_exchanges_database()
         codes_ = exchanges_.loc[exchanges_["operating_mic"] == operating_mic, "eodhd_code"]
         if codes_.empty:
-            raise LookupError(f"Unknown OperatingMIC: {operating_mic}")
+            raise LookupError()
         code_ = codes_.iloc[0]
         if eodhd_code and eodhd_code != code_:
-            raise ValueError("operating_mic and eodhd_code refer to different EODHD exchanges.")
+            raise ValueError()
+
         eodhd_code = code_
 
     return ticker if ticker.endswith(f".{eodhd_code}") else f"{ticker}.{eodhd_code}"
@@ -167,7 +168,7 @@ def get_symbol(
     response.raise_for_status()
     records_ = response.json()
     if not isinstance(records_, list) or not all(isinstance(record_, dict) for record_ in records_):
-        raise ValueError("EODHD returned an invalid symbol response.")
+        raise ValueError()
     return [
         Symbol(
             code=record_["Code"],
