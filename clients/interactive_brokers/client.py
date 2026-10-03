@@ -5,14 +5,15 @@ from typing import List, Optional
 from ib_async import IB, AccountValue, Contract, Position
 
 if __package__:
-    from .configuration import CLIENT_ID, HOST, PORT
+    from . import configuration
     from .domain import AccountInfo, AccountInformation, PortfolioPosition, SecurityInformation
 else:
-    from configuration import CLIENT_ID, HOST, PORT
+    import configuration
     from domain import AccountInfo, AccountInformation, PortfolioPosition, SecurityInformation
 
 __all__ = ["AccountInformation", "PortfolioPosition", "connect", "disconnect", "get_account_information",
-           "get_positions", "print_positions", "SecurityInformation", "fill_isin"]
+           "get_positions", "print_positions", "SecurityInformation", "fill_isin",
+           "to_security_information"]
 
 
 def _get_account_pnl(info: AccountInfo, tag: str, currency: str) -> Decimal:
@@ -135,15 +136,18 @@ async def _get_account_info(
 
 async def connect(
         *,
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        client_id: Optional[int] = None,
         readonly: bool = True,
         timeout: float = 10,
 ) -> IB:
     ib = IB()
     try:
         await ib.connectAsync(
-            HOST,
-            PORT,
-            clientId=CLIENT_ID,
+            host or configuration.host(),
+            port or configuration.port(),
+            clientId=client_id if client_id is not None else configuration.client_id(),
             readonly=readonly,
             timeout=timeout,
             raiseSyncErrors=True,
@@ -235,6 +239,21 @@ async def fill_isin(
     security.contract_id = matches_[0].contract.conId
     security.isin = next(iter(isins_))
     return security
+
+
+async def to_security_information(
+        ib: IB,
+        position: PortfolioPosition,
+        *,
+        timeout: float = 50,
+) -> SecurityInformation:
+    security_ = SecurityInformation(
+        symbol=position.symbol,
+        exchange=position.exchange,
+        currency=position.currency,
+        contract_id=position.contract_id,
+    )
+    return await fill_isin(ib, security_, timeout=timeout)
 
 
 def print_positions(positions: List[PortfolioPosition]) -> None:

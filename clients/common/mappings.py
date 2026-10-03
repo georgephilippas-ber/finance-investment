@@ -4,9 +4,14 @@ from typing import Dict, List
 
 from pandas import DataFrame
 
-__all__ = ["augmented_exchanges_database_ibkr"]
+from clients.eodhd.client import get_symbols_by_isin, read_exchanges_database
+from clients.eodhd.domain import SecurityInformation as EODHDSecurityInformation
+from clients.interactive_brokers.domain import SecurityInformation as IBKRSecurityInformation
 
-IBKR_MAPPING_FILE: Path = Path(__file__).resolve().parents[2] / "domain" / "exchanges" / "ibkr_operating_mic_mapping.json"
+__all__ = ["augmented_exchanges_database_ibkr", "ibkr_to_eodhd_security_information"]
+
+IBKR_MAPPING_FILE: Path = Path(__file__).resolve().parents[
+                              2] / "domain" / "exchanges" / "ibkr_operating_mic_mapping.json"
 
 
 def augmented_exchanges_database_ibkr(exchanges: DataFrame) -> DataFrame:
@@ -21,4 +26,36 @@ def augmented_exchanges_database_ibkr(exchanges: DataFrame) -> DataFrame:
     return exchanges.assign(
         ibkr_exchange=codes_.map(lambda codes: codes[0] if codes else ""),
         ibkr_other_exchanges=codes_.map(lambda codes: tuple(codes[1:])),
+    )
+
+
+def ibkr_to_eodhd_security_information(security: IBKRSecurityInformation) -> EODHDSecurityInformation:
+    if not security.isin:
+        raise ValueError(f"Missing ISIN for {security.symbol}; fill it from IBKR first.")
+
+    exchanges_ = augmented_exchanges_database_ibkr(read_exchanges_database())
+    matches_ = exchanges_.loc[
+        (exchanges_["ibkr_exchange"] == security.exchange)
+        | exchanges_["ibkr_other_exchanges"].map(lambda codes: security.exchange in codes)
+        ]
+    eodhd_codes_ = set(matches_["eodhd_code"])
+    if len(eodhd_codes_) != 1:
+        raise LookupError(f"Expected one EODHD exchange for IBKR exchange {security.exchange}; "
+                          f"received {sorted(eodhd_codes_)}.")
+    eodhd_code_ = next(iter(eodhd_codes_))
+
+    symbols_ = [
+        symbol_ for symbol_ in get_symbols_by_isin(security.isin, currency=security.currency)
+        if symbol_.exchange == eodhd_code_
+    ]
+    tickers_ = {symbol_.code for symbol_ in symbols_}
+    if len(tickers_) != 1:
+        raise LookupError(f"Expected one EODHD ticker for {security.isin} on {eodhd_code_}; "
+                          f"received {sorted(tickers_)}.")
+
+    return EODHDSecurityInformation(
+        ticker=next(iter(tickers_)),
+        exchange=eodhd_code_,
+        isin=security.isin,
+        currency=security.currency,
     )
