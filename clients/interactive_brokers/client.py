@@ -6,7 +6,7 @@ from ib_async import IB, AccountValue, Contract, ContractDetails, LimitOrder, Or
 from ib_async.util import UNSET_DOUBLE
 
 from clients.common.domain import Provider, SecurityInformation
-from printing.printing import print_table
+from printing import print_table
 
 if __package__:
     from . import configuration
@@ -77,6 +77,7 @@ def _to_account_information(info: AccountInfo) -> AccountInformation:
 
     currency_ = next(iter(currencies_))
     unrealized_pnl_ = _get_account_pnl(info, "UnrealizedPnL", currency_)
+
     cost_ = None
     if all(item_.contract.currency == currency_ for item_ in info.portfolio):
         cost_ = sum(

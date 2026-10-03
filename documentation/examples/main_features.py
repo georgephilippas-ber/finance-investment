@@ -7,12 +7,12 @@ sys.path.insert(0, str(ROOT))
 
 from dotenv import load_dotenv
 
-from clients.common.mappings import (SecurityInformationMapping, get_augmented_exchanges_database,
-                                     print_augmented_exchanges_database)
-from clients.eodhd.client import get_security_information_by_isin, get_security_information_by_ticker, latest_price
+from clients.common.exchanges import get_augmented_exchanges_database, print_augmented_exchanges_database
+from clients.common.mappings import SecurityInformationMapping
+from clients.eodhd.client import get_security_information_by_isin, get_security_information_by_ticker, get_latest_price
 from clients.interactive_brokers.client import (connect, disconnect, get_positions_as_security_information,
                                                 print_full_account_information)
-from printing.printing import print_section, print_subsection
+from printing import print_section, print_subsection
 
 
 def _exchanges() -> None:
@@ -32,7 +32,7 @@ def _eodhd_lookup() -> None:
         print(f"{listing_.symbol}.{listing_.exchange}")
 
     print_subsection("latest end-of-day price")
-    print(latest_price(apple_))
+    print(get_latest_price(apple_))
 
 
 async def _ibkr() -> None:
@@ -51,7 +51,7 @@ async def _ibkr() -> None:
         for security_ in await get_positions_as_security_information(ib):
             eodhd_ = SecurityInformationMapping.from_ibkr_to_eodhd(security_)
             print(f"{security_.symbol}.{security_.exchange} (IBKR) → {eodhd_.symbol}.{eodhd_.exchange} (EODHD), "
-                  f"ISIN {security_.isin}, close {latest_price(eodhd_).close}")
+                  f"ISIN {security_.isin}, close {get_latest_price(eodhd_).close}")
 
         print_subsection("EODHD → IBKR")
         for isin_, currency_ in (("US0378331005", "USD"), ("DE0007164600", "EUR")):

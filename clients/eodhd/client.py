@@ -275,7 +275,7 @@ def _get_symbols_in_exchange(exchange: str, load_from_cache: bool = True) -> Lis
     return symbols_
 
 
-def latest_price(security: SecurityInformation, *, lookback_days: int = 14) -> EndOfDayPrice:
+def get_latest_price(security: SecurityInformation, *, lookback_days: int = 14) -> EndOfDayPrice:
     if security.provider is not Provider.EODHD:
         raise ValueError()
 

@@ -5,8 +5,8 @@ Data structures that public functions take or return. All are dataclasses except
 | Type | Module | Returned by | Taken by |
 |---|---|---|---|
 | `Provider` | `clients/common/domain.py` | — | every `SecurityInformation` |
-| `SecurityInformation` | `clients/common/domain.py` | `get_positions_as_security_information`, `get_security_information_by_ticker` / `_by_isin` / `_in_exchange`, `SecurityInformationMapping` methods | `SecurityInformationMapping` methods, `latest_price` |
-| `EndOfDayPrice` | `clients/common/domain.py` | `latest_price` | — |
+| `SecurityInformation` | `clients/common/domain.py` | `get_positions_as_security_information`, `get_security_information_by_ticker` / `_by_isin` / `_in_exchange`, `SecurityInformationMapping` methods | `SecurityInformationMapping` methods, `get_latest_price` |
+| `EndOfDayPrice` | `clients/common/domain.py` | `get_latest_price` | — |
 | `AccountInformation` | `clients/interactive_brokers/domain.py` | `get_account_information` | `print_account_information` |
 | `PortfolioPosition` | `clients/interactive_brokers/domain.py` | `get_positions` | `print_positions` |
 
@@ -18,7 +18,7 @@ class Provider(Enum):
     IBKR = "IBKR"
     EODHD = "EODHD"
 ```
-Whose identifiers a `SecurityInformation` holds. Functions check it and raise `ValueError` on the wrong provider (e.g. `latest_price` accepts only `EODHD`).
+Whose identifiers a `SecurityInformation` holds. Functions check it and raise `ValueError` on the wrong provider (e.g. `get_latest_price` accepts only `EODHD`).
 
 ### `SecurityInformation`
 ```python
@@ -50,7 +50,7 @@ class EndOfDayPrice:
     adjusted_close: float
     volume: int
 ```
-One daily price bar, returned by `latest_price`. `date` is ISO (`YYYY-MM-DD`); `adjusted_close` is adjusted for splits and dividends. Provider-neutral, so other price sources can return it too.
+One daily price bar, returned by `get_latest_price`. `date` is ISO (`YYYY-MM-DD`); `adjusted_close` is adjusted for splits and dividends. Provider-neutral, so other price sources can return it too.
 
 ## Interactive Brokers
 

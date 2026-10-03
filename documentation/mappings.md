@@ -2,24 +2,6 @@
 
 `clients/common/mappings.py` — converts [`SecurityInformation`](domain.md#securityinformation) between IBKR and EODHD identifiers.
 
-## Exchanges with IBKR codes
-
-### `get_augmented_exchanges_database`
-```python
-def get_augmented_exchanges_database() -> DataFrame
-```
-EODHD's exchanges table (`read_exchanges_database()`) with two IBKR columns added from `ibkr_operating_mic_mapping.json`:
-- `ibkr_exchange` — main IBKR code for the MIC (`""` if IBKR does not cover it);
-- `ibkr_other_exchanges` — tuple of further IBKR codes (e.g. `("ARCA", "AMEX")` for XNYS, `("IBIS2",)` for XETR).
-
-This is the table both conversion methods below use. Raises `ValueError` if the JSON names a MIC missing from the table.
-
-### `print_augmented_exchanges_database`
-```python
-def print_augmented_exchanges_database(exchanges: DataFrame) -> None
-```
-Prints the frame from `get_augmented_exchanges_database` as a boxed table sorted by country and MIC — operating MIC, EODHD code, IBKR exchange, other IBKR exchanges, country, currency, name — followed by the row count and how many MICs have an IBKR code.
-
 ## `SecurityInformationMapping`
 
 ```python
@@ -41,7 +23,7 @@ class SecurityInformationMapping:
 ### What they rely on
 
 1. **The ISIN — which security.** It is the only key used to find the security at the target provider; the source `symbol` is never used. Differing tickers therefore convert correctly (IBKR `GRE1` ↔ EODHD `GRE`, IBKR `BP.` ↔ EODHD `BP`). Without an ISIN both methods raise `ValueError`.
-2. **The exchange mapping — which listing.** An ISIN usually trades on many venues (EXV1: Xetra, Frankfurt, Munich, Stuttgart, …); the exchange picks one. Exchanges are translated by joining EODHD's exchanges table (`read_exchanges_database()`) with `domain/exchanges/ibkr_operating_mic_mapping.json` on the operating MIC. `get_augmented_exchanges_database` adds:
+2. **The exchange mapping — which listing.** An ISIN usually trades on many venues (EXV1: Xetra, Frankfurt, Munich, Stuttgart, …); the exchange picks one. Exchanges are translated by joining EODHD's exchanges table (`read_exchanges_database()`) with `domain/exchanges/ibkr_operating_mic_mapping.json` on the operating MIC — see [`get_augmented_exchanges_database`](exchanges.md), which adds:
    - `ibkr_exchange` — main IBKR code (`""` if IBKR does not cover the MIC);
    - `ibkr_other_exchanges` — further codes, e.g. `("ARCA", "AMEX")` for XNYS, `("IBIS2",)` for XETR.
 
