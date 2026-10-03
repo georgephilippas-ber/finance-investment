@@ -188,7 +188,7 @@ def get_symbols_by_isin(isin: str, *, currency: str) -> List[Symbol]:
     isin = isin.strip().upper()
     currency = currency.strip().upper()
     if not isin or not currency:
-        raise ValueError("Provide an ISIN and trading currency.")
+        raise ValueError("!ISIN and !currency")
 
     response = requests.get(
         f"https://eodhd.com/api/search/{isin}",
@@ -198,9 +198,9 @@ def get_symbols_by_isin(isin: str, *, currency: str) -> List[Symbol]:
     response.raise_for_status()
     records_ = response.json()
     if not isinstance(records_, list) or not all(isinstance(record_, dict) for record_ in records_):
-        raise ValueError("EODHD returned an invalid search response.")
+        raise ValueError()
     if len(records_) == 500:
-        raise LookupError("EODHD search reached its result limit; the listing list may be incomplete.")
+        raise LookupError("> limit")
 
     return [
         Symbol(
