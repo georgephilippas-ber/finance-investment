@@ -6,7 +6,7 @@ from ib_async import IB, AccountValue, Contract, ContractDetails, LimitOrder, Or
 from ib_async.util import UNSET_DOUBLE
 
 from clients.common.domain import Provider, SecurityInformation
-from clients.common.printing import print_table
+from printing.printing import print_table
 
 if __package__:
     from . import configuration

@@ -1,6 +1,6 @@
 from typing import List, Sequence
 
-__all__ = ["print_table"]
+__all__ = ["print_section", "print_subsection", "print_table"]
 
 
 def print_table(
@@ -27,3 +27,18 @@ def print_table(
         if index_ in separators_after and index_ != len(rows) - 1:
             print(border_)
     print(border_)
+
+
+def print_section(title: str) -> None:
+    print(f"\n=== {title.upper()} ===")
+
+
+def _capitalize(word: str) -> str:
+    for index_, character_ in enumerate(word):
+        if character_.isalpha():
+            return word[:index_] + character_.upper() + word[index_ + 1:]
+    return word
+
+
+def print_subsection(title: str) -> None:
+    print(f"\n====== {' '.join(_capitalize(word_) for word_ in title.split(' '))} ======")

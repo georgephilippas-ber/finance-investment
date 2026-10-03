@@ -1,15 +1,15 @@
-# Documentation
+# finance-investment
 
 A personal investment toolkit that reads an Interactive Brokers account (read-only) and links its securities to EODHD market data.
 
-## Contents
+## Documentation
 
 | Page | Covers |
 |---|---|
-| [Interactive Brokers client](interactive_brokers.md) | Connecting, account summary with liquidation value and returns, positions, positions → `SecurityInformation`, printing. |
-| [EODHD client](eodhd.md) | Exchanges database, security lookup by ticker / ISIN / exchange, latest end-of-day price. |
-| [Mappings](mappings.md) | Exchanges database with IBKR codes; `SecurityInformationMapping`: converting between IBKR and EODHD, and what it relies on (ISIN, exchange mapping, currency). |
-| [Domain](domain.md) | Public data structures: `Provider`, `SecurityInformation`, `EndOfDayPrice`, `AccountInformation`, `PortfolioPosition`. |
+| [Interactive Brokers client](documentation/interactive_brokers.md) | Connecting, account summary with liquidation value and returns, positions, positions → `SecurityInformation`, printing. |
+| [EODHD client](documentation/eodhd.md) | Exchanges database, security lookup by ticker / ISIN / exchange, latest end-of-day price. |
+| [Mappings](documentation/mappings.md) | Exchanges database with IBKR codes; `SecurityInformationMapping`: converting between IBKR and EODHD, and what it relies on (ISIN, exchange mapping, currency). |
+| [Domain](documentation/domain.md) | Public data structures: `Provider`, `SecurityInformation`, `EndOfDayPrice`, `AccountInformation`, `PortfolioPosition`. |
 
 ## Layout
 
@@ -18,9 +18,10 @@ clients/
   common/              shared across providers
     domain.py          Provider, SecurityInformation, EndOfDayPrice
     mappings.py        SecurityInformationMapping, augmented exchanges database
-    printing.py        print_table (boxed tables used by all print functions)
   interactive_brokers/ IBKR client, configuration, account and position types
   eodhd/               EODHD client, configuration, internal symbol type
+printing/
+  printing.py          print_table (boxed tables), print_section, print_subsection (headings)
 domain/exchanges/      exchanges.sqlite and the MIC mapping JSON files
 cache/eodhd/           cached EODHD responses (tracked)
 ```
@@ -33,13 +34,13 @@ cache/eodhd/           cached EODHD responses (tracked)
 
 ## Running
 
-From the project root:
+The quickest way to see everything working is the [example](#example):
 
 ```bash
-python3 main.py
+python3 documentation/examples/main_features.py
 ```
 
-Prints the account summary and the positions table. Scripts under `research/` run as modules, e.g. `python3 -m research.main`.
+`main.py` is the project's own entry point. Scripts under `research/` run as modules from the project root, e.g. `python3 -m research.main`.
 
 ## Typical flow
 
@@ -58,7 +59,7 @@ Starting from EODHD instead: `get_security_information_by_ticker` / `_by_isin` �
 
 ## Example
 
-[`examples/main_features.py`](examples/main_features.py) runs all of the above end to end: exchanges database with IBKR codes, EODHD lookups by ticker and ISIN, latest price, account and positions tables, IBKR → EODHD and EODHD → IBKR conversion.
+[`documentation/examples/main_features.py`](documentation/examples/main_features.py) runs all of the above end to end: exchanges database with IBKR codes, EODHD lookups by ticker and ISIN, latest price, account and positions tables, IBKR → EODHD and EODHD → IBKR conversion.
 
 ```bash
 python3 documentation/examples/main_features.py

@@ -7,7 +7,7 @@ from ib_async import IB, Contract
 from pandas import DataFrame
 
 from clients.common.domain import Provider, SecurityInformation
-from clients.common.printing import print_table
+from printing.printing import print_table
 from clients.eodhd.client import get_security_information_by_isin, read_exchanges_database
 
 __all__ = ["SecurityInformationMapping", "get_augmented_exchanges_database", "print_augmented_exchanges_database"]
