@@ -20,7 +20,7 @@ def api_key() -> str:
     key_: Optional[str] = os.getenv("EODHD_API_KEY")
 
     if not key_:
-        raise RuntimeError("EODHD_API_KEY must be set in the environment or project .env file.")
+        raise RuntimeError("!EODHD_API_KEY")
 
     return key_.strip()
 
