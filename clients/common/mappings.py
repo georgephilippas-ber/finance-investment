@@ -1,27 +1,30 @@
-from ib_async import Contract
+import json
+from pathlib import Path
+from typing import Dict, List
 
-from clients.eodhd.client import load_dotenv, get_symbols_by_isin, get_symbols_by_ticker
+from pandas import DataFrame
 
-if __name__ == "__main__":
-    from ib_async import IB
+__all__ = ["augmented_exchanges_database_ibkr"]
 
-    load_dotenv()
+IBKR_MAPPING_FILE: Path = Path(__file__).resolve().parents[2] / "domain" / "exchanges" / "ibkr_operating_mic_mapping.json"
 
-    print(get_symbols_by_ticker("MSFT", eodhd_code="AS"))
-    print(get_symbols_by_isin("XS2337100320", currency="EUR"))
-    # print(get_symbols_by_ticker("AMZN", eodhd_code='us'))
 
-    ib = IB()
-    ib.connect("127.0.0.1", 4001, clientId=1)
+def augmented_exchanges_database_ibkr(exchanges: DataFrame) -> DataFrame:
+    with IBKR_MAPPING_FILE.open(encoding="utf-8") as file_:
+        mapping_: Dict[str, List[str]] = json.load(file_)
 
-    contract = Contract(
-        # secType="STK",
-        secIdType="ISIN",
-        secId="US0231351067",
-        currency="USD",
-        exchange="SMART",
+    unknown_mics_ = set(mapping_) - set(exchanges["operating_mic"])
+    if unknown_mics_:
+        raise ValueError(f"IBKR mapping has unknown operating MICs: {sorted(unknown_mics_)}")
+
+    codes_ = exchanges["operating_mic"].map(lambda mic_: mapping_.get(mic_, []))
+    return exchanges.assign(
+        ibkr_exchange=codes_.map(lambda codes: codes[0] if codes else ""),
+        ibkr_other_exchanges=codes_.map(lambda codes: tuple(codes[1:])),
     )
 
-    details = ib.reqContractDetails(contract)
 
-    print(details)
+if __name__ == "__main__":
+    from clients.eodhd.client import read_exchanges_database
+
+    print(augmented_exchanges_database_ibkr(read_exchanges_database()))

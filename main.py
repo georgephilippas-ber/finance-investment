@@ -1,16 +1,37 @@
-# This is a sample Python script.
+from asyncio import run
+from pprint import pprint
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+from dotenv import load_dotenv
+
+from clients.eodhd.client import get_symbols_by_ticker, get_symbols_by_isin
+from clients.interactive_brokers.client import (SecurityInformation, connect, disconnect, fill_isin,
+                                                get_account_information, get_positions, print_positions)
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
+async def _ibkr_main() -> None:
+    ib = await connect()
+    try:
+        pprint(await get_account_information(ib))
+        positions_ = get_positions(ib)
+        print_positions(positions_)
+        for position_ in positions_:
+            security_ = SecurityInformation(
+                symbol=position_.symbol,
+                exchange=position_.exchange,
+                currency=position_.currency,
+                contract_id=position_.contract_id,
+            )
+            pprint(await fill_isin(ib, security_))
+    finally:
+        disconnect(ib)
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+if __name__ == "__main__":
+    load_dotenv()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    print(get_symbols_by_ticker("MSFT", eodhd_code="AS"))
+
+    for s in enumerate(get_symbols_by_isin("DE000A0F5UJ7", currency="EUR")):
+        print(s)
+
+    run(_ibkr_main())
