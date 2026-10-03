@@ -3,7 +3,7 @@ from asyncio import run
 from dotenv import load_dotenv
 
 from clients.interactive_brokers.client import (connect, disconnect, get_account_information, get_positions,
-                                                print_account_information, print_positions, simulate_liquidation)
+                                                print_account_information, print_positions)
 
 
 async def _main() -> None:
