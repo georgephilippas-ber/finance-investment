@@ -273,7 +273,7 @@ def get_symbols_in_exchange(exchange: str, load_from_cache: bool = True) -> List
     return symbols_
 
 
-def get_last_candle(security: SecurityInformation, *, lookback_days: int = 14) -> EODCandle:
+def latest_candle(security: SecurityInformation, *, lookback_days: int = 14) -> EODCandle:
     response = requests.get(
         f"https://eodhd.com/api/eod/{security.ticker}.{security.exchange}",
         params={
@@ -288,7 +288,7 @@ def get_last_candle(security: SecurityInformation, *, lookback_days: int = 14) -
     if not isinstance(records_, list) or not all(isinstance(record_, dict) for record_ in records_):
         raise ValueError()
     if not records_:
-        raise LookupError(f"No candles for {security.ticker}.{security.exchange} in the last {lookback_days} days.")
+        raise LookupError()
 
     record_ = max(records_, key=lambda record_: record_["date"])
     return EODCandle(

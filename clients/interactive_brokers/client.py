@@ -15,8 +15,8 @@ else:
                         SecurityInformation)
 
 __all__ = ["AccountInformation", "PortfolioPosition", "connect", "disconnect", "get_account_information",
-           "get_positions", "print_account_information", "print_positions", "SecurityInformation", "fill_isin",
-           "to_security_information", "LiquidationEstimate", "LiquidationSummary", "simulate_liquidation"]
+           "get_positions", "print_account_information", "print_positions", "SecurityInformation",
+           "positions_to_security_information"]
 
 
 def _get_account_pnl(info: AccountInfo, tag: str, currency: str) -> Decimal:
@@ -145,6 +145,55 @@ async def _get_account_info(
     )
 
 
+async def _fill_isin(
+        ib: IB,
+        security: SecurityInformation,
+        *,
+        timeout: float = 50,
+) -> SecurityInformation:
+    if not ib.isConnected():
+        raise ConnectionError("Connect to IBKR before requesting an ISIN.")
+
+    if security.contract_id is not None:
+        if security.contract_id <= 0:
+            raise ValueError("contract_id must be positive.")
+        contract_ = Contract(conId=security.contract_id)
+    else:
+        contract_ = Contract(
+            secType="STK",
+            symbol=security.symbol,
+            exchange=security.exchange or "SMART",
+            currency=security.currency,
+        )
+
+    details_ = await wait_for(ib.reqContractDetailsAsync(contract_), timeout=timeout)
+    matches_ = [
+        detail_ for detail_ in details_
+        if detail_.contract.symbol == security.symbol
+        and detail_.contract.currency == security.currency
+        and (security.contract_id is None or detail_.contract.conId == security.contract_id)
+    ]
+    if not matches_:
+        raise LookupError(f"No matching contract for {security.symbol} in {security.currency}.")
+    if len({detail_.contract.conId for detail_ in matches_}) != 1:
+        raise LookupError(f"Multiple contracts match {security.symbol} in {security.currency}.")
+
+    isins_ = {
+        identifier_.value
+        for detail_ in matches_
+        for identifier_ in detail_.secIdList
+        if identifier_.tag == "ISIN" and identifier_.value
+    }
+    if len(isins_) != 1:
+        raise LookupError(f"Expected one ISIN for {security.symbol}; received {len(isins_)}.")
+
+    if not security.exchange:
+        security.exchange = matches_[0].contract.primaryExchange or matches_[0].contract.exchange
+    security.contract_id = matches_[0].contract.conId
+    security.isin = next(iter(isins_))
+    return security
+
+
 # PUBLIC
 
 async def connect(
@@ -202,16 +251,15 @@ async def _round_to_tick(
 ) -> Decimal:
     exchanges_ = details.validExchanges.split(",")
     rule_ids_ = details.marketRuleIds.split(",")
-    contract_id_ = details.contract.conId
     if len(exchanges_) != len(rule_ids_):
-        raise LookupError(f"Market rules do not match exchanges for contract {contract_id_}.")
+        raise LookupError()
     rules_ = {exchange_: int(rule_id_) for exchange_, rule_id_ in zip(exchanges_, rule_ids_)}
     if details.contract.exchange not in rules_:
-        raise LookupError(f"No market rule on {details.contract.exchange} for contract {contract_id_}.")
+        raise LookupError()
 
     increments_ = await wait_for(ib.reqMarketRuleAsync(rules_[details.contract.exchange]), timeout=timeout)
     if not increments_:
-        raise LookupError(f"No price increments for contract {contract_id_}.")
+        raise LookupError()
     tick_ = max(
         (increment_ for increment_ in increments_ if Decimal(str(increment_.lowEdge)) <= price),
         key=lambda increment_: increment_.lowEdge,
@@ -230,12 +278,12 @@ async def _simulate_position_liquidation(
     quantity_ = Decimal(str(item.position))
     market_price_ = Decimal(str(item.marketPrice))
     if not market_price_.is_finite() or market_price_ <= 0:
-        raise ValueError(f"No market price for {item.contract.symbol}.")
+        raise ValueError()
 
     details_ = await wait_for(ib.reqContractDetailsAsync(Contract(conId=item.contract.conId, exchange="SMART")),
                               timeout=timeout)
     if len(details_) != 1:
-        raise LookupError(f"Expected one SMART contract for {item.contract.symbol}; received {len(details_)}.")
+        raise LookupError()
 
     selling_ = quantity_ > 0
     limit_price_ = await _round_to_tick(
@@ -248,10 +296,9 @@ async def _simulate_position_liquidation(
     order_ = LimitOrder("SELL" if selling_ else "BUY", float(abs(quantity_)), float(limit_price_), tif="DAY")
     state_ = await wait_for(ib.whatIfOrderAsync(details_[0].contract, order_), timeout=timeout)
     if not isinstance(state_, OrderState) or state_.commission == UNSET_DOUBLE:
-        raise LookupError(f"IBKR did not return a commission for liquidating {item.contract.symbol}.")
+        raise LookupError()
     if state_.commissionCurrency != item.contract.currency:
-        raise ValueError(f"Commission for {item.contract.symbol} is in {state_.commissionCurrency}, "
-                         f"not {item.contract.currency}.")
+        raise ValueError()
 
     gross_proceeds_ = quantity_ * limit_price_
     commission_ = Decimal(str(state_.commission))
@@ -276,7 +323,7 @@ async def _simulate_liquidation(
         timeout: float,
 ) -> LiquidationSummary:
     if not Decimal(0) <= limit_discount < Decimal(1):
-        raise ValueError("limit_discount must be in [0, 1).")
+        raise ValueError()
 
     estimates_ = [
         await _simulate_position_liquidation(ib, item_, limit_discount, timeout=timeout)
@@ -285,7 +332,7 @@ async def _simulate_liquidation(
     ]
     currencies_ = {estimate_.currency for estimate_ in estimates_} - {information.currency}
     if currencies_:
-        raise ValueError(f"Positions in {sorted(currencies_)} need FX conversion to {information.currency}.")
+        raise ValueError()
 
     net_proceeds_ = sum((estimate_.net_proceeds for estimate_ in estimates_), Decimal(0))
     return LiquidationSummary(
@@ -329,79 +376,25 @@ def get_positions(
     ]
 
 
-async def fill_isin(
+async def positions_to_security_information(
         ib: IB,
-        security: SecurityInformation,
+        positions: List[PortfolioPosition],
         *,
         timeout: float = 50,
-) -> SecurityInformation:
-    if not ib.isConnected():
-        raise ConnectionError("Connect to IBKR before requesting an ISIN.")
-
-    if security.contract_id is not None:
-        if security.contract_id <= 0:
-            raise ValueError("contract_id must be positive.")
-        contract_ = Contract(conId=security.contract_id)
-    else:
-        contract_ = Contract(
-            secType="STK",
-            symbol=security.symbol,
-            exchange=security.exchange or "SMART",
-            currency=security.currency,
+) -> List[SecurityInformation]:
+    return [
+        await _fill_isin(
+            ib,
+            SecurityInformation(
+                symbol=position_.symbol,
+                exchange=position_.exchange,
+                currency=position_.currency,
+                contract_id=position_.contract_id,
+            ),
+            timeout=timeout,
         )
-
-    details_ = await wait_for(ib.reqContractDetailsAsync(contract_), timeout=timeout)
-    matches_ = [
-        detail_ for detail_ in details_
-        if detail_.contract.symbol == security.symbol
-        and detail_.contract.currency == security.currency
-        and (security.contract_id is None or detail_.contract.conId == security.contract_id)
+        for position_ in positions
     ]
-    if not matches_:
-        raise LookupError(f"No matching contract for {security.symbol} in {security.currency}.")
-    if len({detail_.contract.conId for detail_ in matches_}) != 1:
-        raise LookupError(f"Multiple contracts match {security.symbol} in {security.currency}.")
-
-    isins_ = {
-        identifier_.value
-        for detail_ in matches_
-        for identifier_ in detail_.secIdList
-        if identifier_.tag == "ISIN" and identifier_.value
-    }
-    if len(isins_) != 1:
-        raise LookupError(f"Expected one ISIN for {security.symbol}; received {len(isins_)}.")
-
-    if not security.exchange:
-        security.exchange = matches_[0].contract.primaryExchange or matches_[0].contract.exchange
-    security.contract_id = matches_[0].contract.conId
-    security.isin = next(iter(isins_))
-    return security
-
-
-async def to_security_information(
-        ib: IB,
-        position: PortfolioPosition,
-        *,
-        timeout: float = 50,
-) -> SecurityInformation:
-    security_ = SecurityInformation(
-        symbol=position.symbol,
-        exchange=position.exchange,
-        currency=position.currency,
-        contract_id=position.contract_id,
-    )
-    return await fill_isin(ib, security_, timeout=timeout)
-
-
-async def simulate_liquidation(
-        ib: IB,
-        account: Optional[str] = None,
-        *,
-        limit_discount: Decimal = Decimal(0),
-        timeout: float = 50,
-) -> LiquidationSummary:
-    information_ = _to_account_information(await _get_account_info(ib, account, timeout=timeout))
-    return await _simulate_liquidation(ib, information_, limit_discount, timeout=timeout)
 
 
 def _print_table(

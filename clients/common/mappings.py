@@ -21,7 +21,7 @@ def augmented_exchanges_database_ibkr(exchanges: DataFrame) -> DataFrame:
 
     unknown_mics_ = set(mapping_) - set(exchanges["operating_mic"])
     if unknown_mics_:
-        raise ValueError(f"IBKR mapping has unknown operating MICs: {sorted(unknown_mics_)}")
+        raise ValueError()
 
     codes_ = exchanges["operating_mic"].map(lambda mic_: mapping_.get(mic_, []))
     return exchanges.assign(
@@ -32,7 +32,7 @@ def augmented_exchanges_database_ibkr(exchanges: DataFrame) -> DataFrame:
 
 def ibkr_to_eodhd_security_information(security: IBKRSecurityInformation) -> EODHDSecurityInformation:
     if not security.isin:
-        raise ValueError(f"Missing ISIN for {security.symbol}; fill it from IBKR first.")
+        raise ValueError()
 
     exchanges_ = augmented_exchanges_database_ibkr(read_exchanges_database())
     matches_ = exchanges_.loc[
@@ -41,8 +41,7 @@ def ibkr_to_eodhd_security_information(security: IBKRSecurityInformation) -> EOD
         ]
     eodhd_codes_ = set(matches_["eodhd_code"])
     if len(eodhd_codes_) != 1:
-        raise LookupError(f"Expected one EODHD exchange for IBKR exchange {security.exchange}; "
-                          f"received {sorted(eodhd_codes_)}.")
+        raise LookupError()
     eodhd_code_ = next(iter(eodhd_codes_))
 
     symbols_ = [
@@ -51,8 +50,7 @@ def ibkr_to_eodhd_security_information(security: IBKRSecurityInformation) -> EOD
     ]
     tickers_ = {symbol_.code for symbol_ in symbols_}
     if len(tickers_) != 1:
-        raise LookupError(f"Expected one EODHD ticker for {security.isin} on {eodhd_code_}; "
-                          f"received {sorted(tickers_)}.")
+        raise LookupError()
 
     return EODHDSecurityInformation(
         ticker=next(iter(tickers_)),
