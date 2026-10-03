@@ -9,6 +9,7 @@ Data structures that public functions take or return. All are dataclasses except
 | `EndOfDayPrice` | `clients/common/domain.py` | `get_latest_price` | — |
 | `AccountInformation` | `clients/interactive_brokers/domain.py` | `get_account_information` | `print_account_information` |
 | `PortfolioPosition` | `clients/interactive_brokers/domain.py` | `get_positions` | `print_positions` |
+| `Lot` | `clients/interactive_brokers/position_tracker.py` | `PositionTracker.by_contract_id` | — |
 
 ## Common
 
@@ -33,7 +34,7 @@ class SecurityInformation:
 ```
 The single identity of a security across the app, in one provider's codes. It is the hand-off object between providers: IBKR positions become `IBKR` instances, EODHD lookups return `EODHD` instances, and `SecurityInformationMapping` converts between them via the ISIN.
 - `symbol` — IBKR symbol or EODHD ticker; they can differ (IBKR `BP.` vs EODHD `BP`).
-- `exchange` — IBKR primary exchange (`SBF`) or EODHD exchange code (`PA`).
+- `exchange` — IBKR primary exchange (`IBIS`) or EODHD exchange code (`XETRA`).
 - `currency` — trading currency of the listing.
 - `isin` — the cross-provider key; required for conversion.
 - `contract_id` — IBKR contract ID; always `None` for EODHD.
@@ -112,9 +113,19 @@ One open position.
 - `average_cost` — per share, buy commission included; `total_cost` = `quantity` × `average_cost`.
 - `market_price`, `market_value` — IBKR's valuation price and value (not necessarily the official close).
 - `unrealized_pnl`, `realized_pnl` — position PnL.
-- `unrealized_hpr` — unrealized holding-period return, `unrealized_pnl / |total_cost|` (not annualized); `None` when the cost is zero.
+- `unrealized_hpr` — unrealized holding-period return, `unrealized_pnl / |total_cost|` (not annualized); `None` when the cost is zero. Printed as "Return".
 - `opened` — earliest open date recorded for the contract in the position tracker; `None` if it has no lots there.
-- `unrealized_annualized_return` — geometric annualization of `unrealized_hpr`: (1 + HPR)^(365 / days) − 1, where days is the quantity-weighted average holding period of the tracked lots. `None` for holdings shorter than 365 days (not annualized, by convention) or without tracked lots.
+- `unrealized_annualized_return` — geometric annualization of `unrealized_hpr`: (1 + HPR)^(365 / days) − 1, where days is the quantity-weighted average holding period of the tracked lots. `None` for holdings shorter than 365 days (not annualized, by convention) or without tracked lots. Printed as "Annual Return".
+
+### `Lot`
+```python
+@dataclass(frozen=True)
+class Lot:
+    contract_id: int
+    opened: date
+    quantity: Decimal
+```
+One purchase recorded in the [position tracker](position_tracker.md): IBKR contract ID (decrypted), open date and quantity. A position bought on several days has several lots; `get_positions` derives `opened` and the annualized return from them.
 
 ## Internal
 

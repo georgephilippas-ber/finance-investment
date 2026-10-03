@@ -6,6 +6,7 @@
 - Connection settings: `IBKR_HOST`, `IBKR_PORT`, `IBKR_CLIENT_ID` (environment or `.env`), defaulting to `127.0.0.1`, `4001`, `1`. Use port `4002` for a paper account.
 - `account` parameters may be omitted when the session manages exactly one account; otherwise pass the account ID (`ValueError` if missing or unknown).
 - `timeout` parameters are seconds per IBKR request.
+- Open dates come from the [position tracker](position_tracker.md) (`IBKR_POSITION_TRACKER_KEY`), not from IBKR.
 
 ## Connection
 
@@ -43,7 +44,7 @@ Returns an [`AccountInformation`](domain.md#accountinformation) in the account's
 ```python
 def get_positions(ib: IB, account: Optional[str] = None) -> List[PortfolioPosition]
 ```
-Open positions as [`PortfolioPosition`](domain.md#portfolioposition)s: quantity, cost, IBKR market price and value, PnL, holding-period return, and — from the position tracker — open date and annualized return (only after a year). Reads the portfolio already streamed to the session; no extra IBKR request. Without a tracker database, key or entry for a contract, the open date and annualized return are `None`.
+Open positions as [`PortfolioPosition`](domain.md#portfolioposition)s: quantity, cost, IBKR market price and value, PnL, holding-period return, and — from the [position tracker](position_tracker.md) — open date and annualized return (only after a year). Reads the portfolio already streamed to the session; no extra IBKR request. Without a tracker database, key or entry for a contract, the open date and annualized return are `None`.
 
 ### `get_positions_as_security_information`
 ```python
@@ -67,7 +68,7 @@ Labels differ from field names: `net_liquidation` is printed as **Portfolio mark
 ```python
 def print_positions(positions: List[PortfolioPosition]) -> None
 ```
-Prints one row per position (symbol, exchange, currency, trading class, quantity, costs, market price and value, PnL, return, annual return, contract ID), with the open date as the first column, and a row count. Missing values are shown as `-`.
+Prints one row per position and a row count. Columns: Opened, Symbol, Exchange, Currency, Trading class, Quantity, Average cost, Total cost, Market price, Market value, Unrealized PnL, Realized PnL, Return (`unrealized_hpr`), Annual Return (`unrealized_annualized_return`), Contract ID. Missing values are shown as `-`.
 
 ### `print_full_account_information`
 ```python
