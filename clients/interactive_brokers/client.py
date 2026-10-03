@@ -3,6 +3,7 @@ from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
 from typing import List, Optional, Sequence
 
 from ib_async import IB, AccountValue, Contract, ContractDetails, LimitOrder, OrderState, PortfolioItem
+from ib_async.util import UNSET_DOUBLE
 
 if __package__:
     from . import configuration
@@ -34,7 +35,7 @@ def _get_account_pnl(info: AccountInfo, tag: str, currency: str) -> Decimal:
                 raise ValueError(f"Multiple {tag_} values for account {info.account}.")
 
             amount_ = Decimal(matches_[0].value)
-            if not amount_.is_finite() or amount_ == Decimal("1.7976931348623157E+308"):
+            if not amount_.is_finite() or amount_ == Decimal(str(UNSET_DOUBLE)):
                 raise ValueError(f"{tag_} is unavailable for account {info.account}.")
             return amount_
 
@@ -246,7 +247,7 @@ async def _simulate_position_liquidation(
     )
     order_ = LimitOrder("SELL" if selling_ else "BUY", float(abs(quantity_)), float(limit_price_), tif="DAY")
     state_ = await wait_for(ib.whatIfOrderAsync(details_[0].contract, order_), timeout=timeout)
-    if not isinstance(state_, OrderState) or state_.commission >= 1.7976931348623157E+308:
+    if not isinstance(state_, OrderState) or state_.commission == UNSET_DOUBLE:
         raise LookupError(f"IBKR did not return a commission for liquidating {item.contract.symbol}.")
     if state_.commissionCurrency != item.contract.currency:
         raise ValueError(f"Commission for {item.contract.symbol} is in {state_.commissionCurrency}, "
@@ -472,4 +473,4 @@ def print_account_information(information: AccountInformation) -> None:
         ["Maintenance margin", format(information.maintenance_margin, ",f")],
         ["Realized PnL", format(information.realized_pnl, ",f")],
     ]
-    _print_table(["Field", "Value"], rows_, first_right_aligned_column=1, separators_after=(1, 3, 6))
+    _print_table(["Field", "Value"], rows_, first_right_aligned_column=1, separators_after=(1, 3, 6, 11))
