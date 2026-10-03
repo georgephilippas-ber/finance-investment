@@ -15,7 +15,8 @@ else:
                         SecurityInformation)
 
 __all__ = ["AccountInformation", "PortfolioPosition", "connect", "disconnect", "get_account_information",
-           "get_positions", "print_account_information", "print_full_account_information", "print_positions", "SecurityInformation",
+           "get_positions", "print_account_information", "print_full_account_information", "print_positions",
+           "SecurityInformation",
            "positions_to_security_information"]
 
 
@@ -170,8 +171,8 @@ async def _fill_isin(
     matches_ = [
         detail_ for detail_ in details_
         if detail_.contract.symbol == security.symbol
-        and detail_.contract.currency == security.currency
-        and (security.contract_id is None or detail_.contract.conId == security.contract_id)
+           and detail_.contract.currency == security.currency
+           and (security.contract_id is None or detail_.contract.conId == security.contract_id)
     ]
     if not matches_:
         raise LookupError(f"No matching contract for {security.symbol} in {security.currency}.")
@@ -265,6 +266,7 @@ async def _round_to_tick(
         key=lambda increment_: increment_.lowEdge,
     ).increment
     tick_ = Decimal(str(tick_))
+
     return (price / tick_).quantize(Decimal(1), rounding=rounding) * tick_
 
 
@@ -280,8 +282,10 @@ async def _simulate_position_liquidation(
     if not market_price_.is_finite() or market_price_ <= 0:
         raise ValueError()
 
-    details_ = await wait_for(ib.reqContractDetailsAsync(Contract(conId=item.contract.conId, exchange="SMART")),
-                              timeout=timeout)
+    details_: List[ContractDetails] = await wait_for(
+        ib.reqContractDetailsAsync(Contract(conId=item.contract.conId, exchange="SMART")),
+        timeout=timeout)
+
     if len(details_) != 1:
         raise LookupError()
 
@@ -294,7 +298,9 @@ async def _simulate_position_liquidation(
         timeout=timeout,
     )
     order_ = LimitOrder("SELL" if selling_ else "BUY", float(abs(quantity_)), float(limit_price_), tif="DAY")
+
     state_ = await wait_for(ib.whatIfOrderAsync(details_[0].contract, order_), timeout=timeout)
+
     if not isinstance(state_, OrderState) or state_.commission == UNSET_DOUBLE:
         raise LookupError()
     if state_.commissionCurrency != item.contract.currency:
@@ -425,8 +431,8 @@ def _print_table(
 
 def print_positions(positions: List[PortfolioPosition]) -> None:
     headers_: List[str] = ["Symbol", "Exchange", "Currency", "Trading class", "Quantity", "Average cost", "Total cost",
-                          "Market price", "Market value", "Unrealized PnL", "Realized PnL", "Return",
-                          "Contract ID"]
+                           "Market price", "Market value", "Unrealized PnL", "Realized PnL", "Return",
+                           "Contract ID"]
     rows_: List[List[str]] = [
         [
             position_.symbol,
@@ -477,5 +483,5 @@ async def print_full_account_information(
         timeout: float = 50,
 ) -> None:
     print_account_information(await get_account_information(ib, account, limit_discount=limit_discount,
-                                                             timeout=timeout))
+                                                            timeout=timeout))
     print_positions(get_positions(ib, account))
