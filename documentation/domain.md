@@ -32,7 +32,7 @@ class SecurityInformation:
     contract_id: Optional[int] = None
 ```
 The single identity of a security across the app, in one provider's codes. It is the hand-off object between providers: IBKR positions become `IBKR` instances, EODHD lookups return `EODHD` instances, and `SecurityInformationMapping` converts between them via the ISIN.
-- `symbol` — IBKR symbol or EODHD ticker; they can differ (`GRE1` vs `GRE`).
+- `symbol` — IBKR symbol or EODHD ticker; they can differ (IBKR `BP.` vs EODHD `BP`).
 - `exchange` — IBKR primary exchange (`SBF`) or EODHD exchange code (`PA`).
 - `currency` — trading currency of the listing.
 - `isin` — the cross-provider key; required for conversion.

@@ -22,8 +22,8 @@ class SecurityInformationMapping:
 
 ### What they rely on
 
-1. **The ISIN — which security.** It is the only key used to find the security at the target provider; the source `symbol` is never used. Differing tickers therefore convert correctly (IBKR `GRE1` ↔ EODHD `GRE`, IBKR `BP.` ↔ EODHD `BP`). Without an ISIN both methods raise `ValueError`.
-2. **The exchange mapping — which listing.** An ISIN usually trades on many venues (EXV1: Xetra, Frankfurt, Munich, Stuttgart, …); the exchange picks one. Exchanges are translated by joining EODHD's exchanges table (`read_exchanges_database()`) with `domain/exchanges/ibkr_operating_mic_mapping.json` on the operating MIC — see [`get_augmented_exchanges_database`](exchanges.md), which adds:
+1. **The ISIN — which security.** It is the only key used to find the security at the target provider; the source `symbol` is never used. Differing tickers therefore convert correctly (IBKR `BP.` ↔ EODHD `BP`). Without an ISIN both methods raise `ValueError`.
+2. **The exchange mapping — which listing.** An ISIN usually trades on many venues (SAP: Xetra, Frankfurt, Stuttgart, London, …); the exchange picks one. Exchanges are translated by joining EODHD's exchanges table (`read_exchanges_database()`) with `domain/exchanges/ibkr_operating_mic_mapping.json` on the operating MIC — see [`get_augmented_exchanges_database`](exchanges.md), which adds:
    - `ibkr_exchange` — main IBKR code (`""` if IBKR does not cover the MIC);
    - `ibkr_other_exchanges` — further codes, e.g. `("ARCA", "AMEX")` for XNYS, `("IBIS2",)` for XETR.
 
@@ -48,7 +48,7 @@ class SecurityInformationMapping:
 
 ### Behaviour and limits
 
-- **Round trip.** IBKR → EODHD → IBKR returns an identical object for primary listings (verified for EXV1/IBIS and GRE1/SBF; AAPL from EODHD resolves to NASDAQ, contract 265598).
+- **Round trip.** IBKR → EODHD → IBKR returns an identical object for primary listings (verified for SAP and Volkswagen `VOW3` on Xetra / IBIS; AAPL from EODHD resolves to NASDAQ, contract 265598).
 - **Primary listings only towards IBKR.** IBKR is matched on the primary exchange, so an EODHD listing on a secondary venue (e.g. `F` Frankfurt for a German stock whose primary is Xetra) finds no match.
 - **Mapping coverage.** Exchanges without IBKR codes in the JSON (e.g. TSX Venture, Hamburg) cannot be converted in either direction.
 - **ISIN quality.** EODHD records occasionally lack an ISIN, and a security whose ISIN changed (e.g. after a merger) matches only under the current one.

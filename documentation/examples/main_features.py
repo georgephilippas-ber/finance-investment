@@ -30,7 +30,7 @@ def _eodhd_lookup() -> None:
     print(apple_)
 
     print_subsection("lookup by ISIN (all EUR listings)")
-    for listing_ in get_security_information_by_isin("DE000A0F5UJ7", currency="EUR"):
+    for listing_ in get_security_information_by_isin("DE0007164600", currency="EUR"):
         print(f"{listing_.symbol}.{listing_.exchange}")
 
     print_subsection("latest end-of-day price")
@@ -53,7 +53,7 @@ async def _ibkr() -> None:
                   f"ISIN {security_.isin}, close {get_latest_price(eodhd_).close}")
 
         print_subsection("EODHD → IBKR")
-        for isin_, currency_ in (("US0378331005", "USD"), ("DE0007164600", "EUR")):
+        for isin_, currency_ in (("US0378331005", "USD"), ("DE0007664039", "EUR")):
             eodhd_ = get_security_information_by_isin(isin_, currency=currency_)[0]
             ibkr_ = await SecurityInformationMapping.from_eodhd_to_ibkr(ib, eodhd_)
             print(f"{eodhd_.symbol}.{eodhd_.exchange} (EODHD) → {ibkr_.symbol} on {ibkr_.exchange}, "

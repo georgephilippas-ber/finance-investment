@@ -50,7 +50,7 @@ def get_security_information_in_exchange(exchange: str, load_from_cache: bool = 
 ```python
 def get_latest_price(security: SecurityInformation, *, lookback_days: int = 14) -> EndOfDayPrice
 ```
-Most recent daily bar ([`EndOfDayPrice`](domain.md#endofdayprice)) for `symbol.exchange`, e.g. `GRE.PA`.
+Most recent daily bar ([`EndOfDayPrice`](domain.md#endofdayprice)) for `symbol.exchange`, e.g. `SAP.XETRA`.
 - `security` — must be `Provider.EODHD` (convert IBKR information with [`SecurityInformationMapping.from_ibkr_to_eodhd`](mappings.md)); otherwise `ValueError`.
 - `lookback_days` — calendar days searched back from today, covering weekends and holidays; `LookupError` if no bar falls in the window.
 
