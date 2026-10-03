@@ -15,7 +15,7 @@ else:
                         SecurityInformation)
 
 __all__ = ["AccountInformation", "PortfolioPosition", "connect", "disconnect", "get_account_information",
-           "get_positions", "print_account_information", "print_positions", "SecurityInformation",
+           "get_positions", "print_account_information", "print_full_account_information", "print_positions", "SecurityInformation",
            "positions_to_security_information"]
 
 
@@ -467,3 +467,15 @@ def print_account_information(information: AccountInformation) -> None:
         ["Realized PnL", format(information.realized_pnl, ",f")],
     ]
     _print_table(["Field", "Value"], rows_, first_right_aligned_column=1, separators_after=(1, 3, 6, 11))
+
+
+async def print_full_account_information(
+        ib: IB,
+        account: Optional[str] = None,
+        *,
+        limit_discount: Decimal = Decimal(0),
+        timeout: float = 50,
+) -> None:
+    print_account_information(await get_account_information(ib, account, limit_discount=limit_discount,
+                                                             timeout=timeout))
+    print_positions(get_positions(ib, account))

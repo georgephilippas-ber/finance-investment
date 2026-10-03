@@ -2,15 +2,13 @@ from asyncio import run
 
 from dotenv import load_dotenv
 
-from clients.interactive_brokers.client import (connect, disconnect, get_account_information, get_positions,
-                                                print_account_information, print_positions)
+from clients.interactive_brokers.client import connect, disconnect, print_full_account_information
 
 
 async def _main() -> None:
     ib = await connect()
     try:
-        print_account_information(await get_account_information(ib))
-        print_positions(get_positions(ib))
+        await print_full_account_information(ib)
     finally:
         disconnect(ib)
 
