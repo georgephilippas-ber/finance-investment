@@ -5,6 +5,7 @@ from typing import Dict, List
 from pandas import DataFrame
 
 from clients.eodhd.client import get_symbols_by_isin, read_exchanges_database
+
 from clients.eodhd.domain import SecurityInformation as EODHDSecurityInformation
 from clients.interactive_brokers.domain import SecurityInformation as IBKRSecurityInformation
 
