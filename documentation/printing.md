@@ -4,12 +4,14 @@
 
 ## `print_table`
 ```python
-def print_table(headers: List[str], rows: List[List[str]], *, first_right_aligned_column: int, separators_after: Sequence[int] = ()) -> None
+def print_table(headers: List[str], rows: List[List[str]], *, first_right_aligned_column: int, separators_after: Sequence[int] = (), title: Optional[str] = None) -> None
 ```
 Prints a boxed table sized to its contents.
 - `headers`, `rows` — cell text; every row has one string per header.
 - `first_right_aligned_column` — columns from this index on are right-aligned (numbers); earlier ones left-aligned. Use `len(headers)` to left-align everything.
 - `separators_after` — row indices after which a separator line is drawn (to group rows); ignored after the last row.
+- `title` — optional title printed as a framed, centered top row spanning the table; the last column is widened
+  if the title is longer than the table.
 
 ## `print_section`
 ```python

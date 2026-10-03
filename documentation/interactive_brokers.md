@@ -100,6 +100,7 @@ Raises `LookupError` if a position has no or several matching contracts, or not 
 ```python
 def print_account_information(information: AccountInformation) -> None
 ```
+Titled **ACCOUNT SUMMARY** in the table's top row.
 Prints a two-column table in groups: account and currency; portfolio market value and net liquidation; gross return, net return and unrealized PnL; cash and margin figures; realized PnL.
 
 Labels differ from field names: IBKR's `net_liquidation` is printed as **Portfolio market value** (this includes
@@ -112,6 +113,7 @@ Amounts are formatted with Babel in the account's currency (`€307.57`): rounde
 ```python
 def print_positions(positions: List[PortfolioPosition]) -> None
 ```
+Titled **OPEN POSITIONS** in the table's top row.
 Prints one row per position and a row count. Columns: Contract ID, Opened, Symbol, Exchange, Quantity, Total cost, Market price, Market value, Unrealized PnL, Return (`unrealized_hpr`), Annual Return (`unrealized_annualized_return`). Amounts (total cost, market price, market value, unrealized PnL) are formatted like the account summary, in each position's own currency. Missing values are shown as `-`.
 
 ### `print_full_account_information`

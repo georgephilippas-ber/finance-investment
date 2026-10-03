@@ -384,7 +384,7 @@ def print_positions(positions: List[PortfolioPosition]) -> None:
         ]
         for position_ in positions
     ]
-    print_table(headers_, rows_, first_right_aligned_column=4)
+    print_table(headers_, rows_, first_right_aligned_column=4, title="OPEN POSITIONS")
     print(f"({len(rows_)} {'row' if len(rows_) == 1 else 'rows'})")
 
 
@@ -413,7 +413,8 @@ def print_account_information(information: AccountInformation) -> None:
         ["Maintenance margin", _format_money(information.maintenance_margin, currency_)],
         ["Realized PnL", _format_money(information.realized_pnl, currency_)],
     ]
-    print_table(["Field", "Value"], rows_, first_right_aligned_column=1, separators_after=(1, 3, 6, 11))
+    print_table(["Field", "Value"], rows_, first_right_aligned_column=1, separators_after=(1, 3, 6, 11),
+                title="ACCOUNT SUMMARY")
 
 
 async def print_full_account_information(

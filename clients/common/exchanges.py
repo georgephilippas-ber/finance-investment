@@ -47,6 +47,6 @@ def print_augmented_exchanges_database(exchanges: DataFrame) -> None:
         ]
         for row_ in exchanges.sort_values(["country", "operating_mic"]).itertuples(index=False)
     ]
-    print_table(headers_, rows_, first_right_aligned_column=len(headers_))
+    print_table(headers_, rows_, first_right_aligned_column=len(headers_), title="EXCHANGES")
     covered_ = sum(1 for row_ in rows_ if row_[2])
     print(f"({len(rows_)} {'row' if len(rows_) == 1 else 'rows'}, {covered_} with IBKR)")

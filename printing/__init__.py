@@ -1,4 +1,4 @@
-from typing import List, Sequence
+from typing import List, Optional, Sequence
 
 __all__ = ["print_section", "print_subsection", "print_table"]
 
@@ -9,13 +9,21 @@ def print_table(
         *,
         first_right_aligned_column: int,
         separators_after: Sequence[int] = (),
+        title: Optional[str] = None,
 ) -> None:
     widths_: List[int] = [
         max(len(header_), *(len(row_[column_]) for row_ in rows))
         for column_, header_ in enumerate(headers)
     ] if rows else [len(header_) for header_ in headers]
+    inner_ = sum(width_ + 3 for width_ in widths_) - 3
+    if title is not None and len(title) > inner_:
+        widths_[-1] += len(title) - inner_
+        inner_ = len(title)
     border_ = "+" + "+".join("-" * (width_ + 2) for width_ in widths_) + "+"
 
+    if title is not None:
+        print("+" + "-" * (inner_ + 2) + "+")
+        print("| " + title.center(inner_) + " |")
     print(border_)
     print("| " + " | ".join(header_.ljust(width_) for header_, width_ in zip(headers, widths_)) + " |")
     print(border_)

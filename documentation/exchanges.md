@@ -16,4 +16,5 @@ This is the table both [`SecurityInformationMapping`](mappings.md) methods use. 
 ```python
 def print_augmented_exchanges_database(exchanges: DataFrame) -> None
 ```
+Titled **EXCHANGES** in the table's top row.
 Prints the frame from `get_augmented_exchanges_database` as a boxed table sorted by country and MIC — operating MIC, EODHD code, IBKR exchange, other IBKR exchanges, country, currency, name — followed by the row count and how many MICs have an IBKR code.
