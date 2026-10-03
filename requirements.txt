@@ -4,3 +4,4 @@ pandas
 bt
 python-dotenv
 cryptography
+babel

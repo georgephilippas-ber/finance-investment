@@ -41,7 +41,7 @@ main.py                   runs the example
 ## Setup
 
 1. **Python packages:** `pip install -r requirements.txt` (includes `ib_async`, `pandas`, `python-dotenv`,
-   `cryptography`).
+   `cryptography`, `babel`).
 2. **IB Gateway or TWS** running with the API enabled. Defaults `127.0.0.1:4001`, client ID `1`; override with
    `IBKR_HOST`, `IBKR_PORT` (`4002` for paper), `IBKR_CLIENT_ID`.
 3. **`.env`** at the project root (gitignored; scripts call `load_dotenv()`):
@@ -83,7 +83,7 @@ runs `features()` from the [example](#example). Scripts under `research/` run as
 load_dotenv()
 ib = await connect()
 try:
-    await print_full_account_information(ib)                            # positions table, then account summary
+    await print_full_account_information(ib)                            # account summary, then positions table
     for security in await get_positions_as_security_information(ib):    # Provider.IBKR, with ISIN
         eodhd = SecurityInformationMapping.from_ibkr_to_eodhd(security)  # Provider.EODHD
         print(get_latest_price(eodhd).close)
@@ -98,7 +98,7 @@ Starting from EODHD instead: `get_security_information_by_ticker` / `_by_isin` �
 
 [`documentation/examples/main_features.py`](documentation/examples/main_features.py) runs everything end to end:
 exchanges database with IBKR codes, EODHD lookups by ticker and ISIN, latest price, IBKR → EODHD and EODHD → IBKR
-conversion, and finally the positions table and account summary.
+conversion, and finally the account summary and positions table.
 
 ```bash
 python3 documentation/examples/main_features.py

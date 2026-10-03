@@ -1,6 +1,13 @@
 from asyncio import run
 
-from documentation.examples.main_features import features
+from clients.interactive_brokers.client import print_full_account_information, connect
 
 if __name__ == "__main__":
-    run(features())
+    async def main():
+        client_ = await connect()
+
+        await print_full_account_information(client_)
+        client_.disconnect()
+
+
+    run(main())

@@ -64,14 +64,16 @@ Prints a two-column table in groups: account and currency; portfolio market valu
 
 Labels differ from field names: `net_liquidation` is printed as **Portfolio market value** and `liquidation_value` as **Net liquidation**.
 
+Amounts are formatted with Babel in the account's currency (`€307.57`): rounded half up to cents, and shown compactly from one million (`€1.53M`, `€2.4B`). Returns are percentages; missing values are shown as `-`.
+
 ### `print_positions`
 ```python
 def print_positions(positions: List[PortfolioPosition]) -> None
 ```
-Prints one row per position and a row count. Columns: Contract ID, Opened, Symbol, Exchange, Quantity, Total cost, Market price, Market value, Unrealized PnL, Return (`unrealized_hpr`), Annual Return (`unrealized_annualized_return`). Missing values are shown as `-`.
+Prints one row per position and a row count. Columns: Contract ID, Opened, Symbol, Exchange, Quantity, Total cost, Market price, Market value, Unrealized PnL, Return (`unrealized_hpr`), Annual Return (`unrealized_annualized_return`). Amounts (total cost, market price, market value, unrealized PnL) are formatted like the account summary, in each position's own currency. Missing values are shown as `-`.
 
 ### `print_full_account_information`
 ```python
 async def print_full_account_information(ib: IB, account: Optional[str] = None, *, limit_discount: Decimal = Decimal(0), timeout: float = 50) -> None
 ```
-Fetches and prints both tables: `get_positions` → `print_positions`, then `get_account_information` → `print_account_information`, so the account summary comes last. Parameters are passed through.
+Fetches and prints both tables: `get_account_information` → `print_account_information`, then `get_positions` → `print_positions`, so the account summary comes first. Parameters are passed through.

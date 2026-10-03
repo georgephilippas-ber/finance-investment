@@ -59,7 +59,7 @@ async def _ibkr() -> None:
             print(f"{eodhd_.symbol}.{eodhd_.exchange} (EODHD) → {ibkr_.symbol} on {ibkr_.exchange}, "
                   f"contract {ibkr_.contract_id} (IBKR)")
 
-        print_subsection("positions and account summary")
+        print_subsection("account summary and positions")
         await print_full_account_information(ib)
     finally:
         disconnect(ib)

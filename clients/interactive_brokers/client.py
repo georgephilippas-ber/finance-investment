@@ -1,9 +1,10 @@
 from asyncio import wait_for
 from datetime import date
-from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
+from decimal import ROUND_CEILING, ROUND_FLOOR, ROUND_HALF_UP, Decimal
 from sqlite3 import OperationalError
 from typing import List, Optional, Tuple
 
+from babel.numbers import format_compact_currency, format_currency
 from ib_async import IB, AccountValue, Contract, ContractDetails, LimitOrder, OrderState, PortfolioItem
 from ib_async.util import UNSET_DOUBLE
 
@@ -453,10 +454,10 @@ def print_positions(positions: List[PortfolioPosition]) -> None:
             position_.symbol,
             position_.exchange,
             format(position_.quantity, ",f"),
-            format(position_.total_cost, ",f"),
-            format(position_.market_price, ",f"),
-            format(position_.market_value, ",f"),
-            format(position_.unrealized_pnl, ",f"),
+            _format_money(position_.total_cost, position_.currency),
+            _format_money(position_.market_price, position_.currency),
+            _format_money(position_.market_value, position_.currency),
+            _format_money(position_.unrealized_pnl, position_.currency),
             format(position_.unrealized_hpr, ".2%") if position_.unrealized_hpr is not None else "-",
             format(position_.unrealized_annualized_return, ".2%")
             if position_.unrealized_annualized_return is not None else "-",
@@ -467,22 +468,30 @@ def print_positions(positions: List[PortfolioPosition]) -> None:
     print(f"({len(rows_)} {'row' if len(rows_) == 1 else 'rows'})")
 
 
+def _format_money(amount: Optional[Decimal], currency: str) -> str:
+    if amount is None:
+        return "-"
+    if abs(amount) >= 1_000_000:
+        return format_compact_currency(amount, currency, locale="en_US", fraction_digits=2)
+    return format_currency(amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP), currency, locale="en_US")
+
+
 def print_account_information(information: AccountInformation) -> None:
+    currency_ = information.currency
     rows_: List[List[str]] = [
         ["Account", information.account],
-        ["Currency", information.currency],
-        ["Portfolio market value", format(information.net_liquidation, ",f")],
-        ["Net liquidation",
-         format(information.liquidation_value, ",.2f") if information.liquidation_value is not None else ""],
-        ["Gross return", format(information.gross_return, ".2%") if information.gross_return is not None else ""],
-        ["Net return", format(information.net_return, ".2%") if information.net_return is not None else ""],
-        ["Unrealized PnL", format(information.unrealized_pnl, ",f")],
-        ["Total cash", format(information.total_cash, ",f")],
-        ["Buying power", format(information.buying_power, ",f")],
-        ["Available funds", format(information.available_funds, ",f")],
-        ["Excess liquidity", format(information.excess_liquidity, ",f")],
-        ["Maintenance margin", format(information.maintenance_margin, ",f")],
-        ["Realized PnL", format(information.realized_pnl, ",f")],
+        ["Currency", currency_],
+        ["Portfolio market value", _format_money(information.net_liquidation, currency_)],
+        ["Net liquidation", _format_money(information.liquidation_value, currency_)],
+        ["Gross return", format(information.gross_return, ".2%") if information.gross_return is not None else "-"],
+        ["Net return", format(information.net_return, ".2%") if information.net_return is not None else "-"],
+        ["Unrealized PnL", _format_money(information.unrealized_pnl, currency_)],
+        ["Total cash", _format_money(information.total_cash, currency_)],
+        ["Buying power", _format_money(information.buying_power, currency_)],
+        ["Available funds", _format_money(information.available_funds, currency_)],
+        ["Excess liquidity", _format_money(information.excess_liquidity, currency_)],
+        ["Maintenance margin", _format_money(information.maintenance_margin, currency_)],
+        ["Realized PnL", _format_money(information.realized_pnl, currency_)],
     ]
     print_table(["Field", "Value"], rows_, first_right_aligned_column=1, separators_after=(1, 3, 6, 11))
 
@@ -494,6 +503,6 @@ async def print_full_account_information(
         limit_discount: Decimal = Decimal(0),
         timeout: float = 50,
 ) -> None:
-    print_positions(get_positions(ib, account))
     print_account_information(await get_account_information(ib, account, limit_discount=limit_discount,
                                                             timeout=timeout))
+    print_positions(get_positions(ib, account))
