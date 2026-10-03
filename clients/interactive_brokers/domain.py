@@ -37,6 +37,11 @@ class PortfolioPosition:
     quantity: Decimal
     average_cost: Decimal
     total_cost: Decimal
+    market_price: Decimal
+    market_value: Decimal
+    unrealized_pnl: Decimal
+    realized_pnl: Decimal
+    unrealized_return: Optional[Decimal]
     contract_id: int
 
 

@@ -2,7 +2,7 @@ from asyncio import wait_for
 from decimal import Decimal
 from typing import List, Optional
 
-from ib_async import IB, AccountValue, Contract, Position
+from ib_async import IB, AccountValue, Contract, PortfolioItem
 
 if __package__:
     from . import configuration
@@ -84,7 +84,7 @@ def _to_account_information(info: AccountInfo) -> AccountInformation:
 def _get_positions(
         ib: IB,
         account: Optional[str] = None,
-) -> List[Position]:
+) -> List[PortfolioItem]:
     if not ib.isConnected():
         raise ConnectionError("Connect to IBKR before requesting positions.")
 
@@ -98,7 +98,7 @@ def _get_positions(
         if account not in accounts_:
             raise ValueError(f"Unknown managed account: {account}")
 
-    return list(ib.positions(account))
+    return list(ib.portfolio(account))
 
 
 async def _get_account_info(
@@ -173,6 +173,10 @@ async def get_account_information(
     return _to_account_information(info_)
 
 
+def _get_return(pnl: Decimal, cost: Decimal) -> Optional[Decimal]:
+    return pnl / abs(cost) if cost else None
+
+
 def get_positions(
         ib: IB,
         account: Optional[str] = None,
@@ -181,12 +185,20 @@ def get_positions(
         PortfolioPosition(
             contract_id=position_.contract.conId,
             symbol=position_.contract.symbol,
-            exchange=position_.contract.exchange,
+            exchange=position_.contract.primaryExchange or position_.contract.exchange,
             currency=position_.contract.currency,
             trading_class=position_.contract.tradingClass,
             quantity=Decimal(str(position_.position)),
-            average_cost=Decimal(str(position_.avgCost)),
-            total_cost=Decimal(str(position_.position)) * Decimal(str(position_.avgCost)),
+            average_cost=Decimal(str(position_.averageCost)),
+            total_cost=Decimal(str(position_.position)) * Decimal(str(position_.averageCost)),
+            market_price=Decimal(str(position_.marketPrice)),
+            market_value=Decimal(str(position_.marketValue)),
+            unrealized_pnl=Decimal(str(position_.unrealizedPNL)),
+            realized_pnl=Decimal(str(position_.realizedPNL)),
+            unrealized_return=_get_return(
+                Decimal(str(position_.unrealizedPNL)),
+                Decimal(str(position_.position)) * Decimal(str(position_.averageCost)),
+            ),
         )
         for position_ in _get_positions(ib, account)
     ]
@@ -258,6 +270,7 @@ async def to_security_information(
 
 def print_positions(positions: List[PortfolioPosition]) -> None:
     headers_: List[str] = ["Symbol", "Exchange", "Currency", "Trading class", "Quantity", "Average cost", "Total cost",
+                          "Market price", "Market value", "Unrealized PnL", "Realized PnL", "Return",
                           "Contract ID"]
     rows_: List[List[str]] = [
         [
@@ -268,6 +281,11 @@ def print_positions(positions: List[PortfolioPosition]) -> None:
             format(position_.quantity, ",f"),
             format(position_.average_cost, ",f"),
             format(position_.total_cost, ",f"),
+            format(position_.market_price, ",f"),
+            format(position_.market_value, ",f"),
+            format(position_.unrealized_pnl, ",f"),
+            format(position_.realized_pnl, ",f"),
+            format(position_.unrealized_return, ".2%") if position_.unrealized_return is not None else "",
             str(position_.contract_id),
         ]
         for position_ in positions

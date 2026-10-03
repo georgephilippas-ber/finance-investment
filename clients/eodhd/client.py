@@ -1,6 +1,7 @@
 import json
 import os
 from contextlib import closing
+from datetime import date, timedelta
 from pathlib import Path
 from sqlite3 import connect, Connection
 from typing import Optional, List, Dict
@@ -10,10 +11,10 @@ from pandas import DataFrame, read_sql_query
 
 if __package__:
     from .configuration import CACHE_DIRECTORY
-    from .domain import Symbol
+    from .domain import EODCandle, SecurityInformation, Symbol
 else:
     from configuration import CACHE_DIRECTORY
-    from clients.eodhd.domain import Symbol
+    from clients.eodhd.domain import EODCandle, SecurityInformation, Symbol
 
 
 def api_key() -> str:
@@ -270,6 +271,35 @@ def get_symbols_in_exchange(exchange: str, load_from_cache: bool = True) -> List
             file_.write("\n")
 
     return symbols_
+
+
+def get_last_candle(security: SecurityInformation, *, lookback_days: int = 14) -> EODCandle:
+    response = requests.get(
+        f"https://eodhd.com/api/eod/{security.ticker}.{security.exchange}",
+        params={
+            "from": (date.today() - timedelta(days=lookback_days)).isoformat(),
+            "fmt": "json",
+            "api_token": api_key(),
+        },
+        timeout=30,
+    )
+    response.raise_for_status()
+    records_ = response.json()
+    if not isinstance(records_, list) or not all(isinstance(record_, dict) for record_ in records_):
+        raise ValueError()
+    if not records_:
+        raise LookupError(f"No candles for {security.ticker}.{security.exchange} in the last {lookback_days} days.")
+
+    record_ = max(records_, key=lambda record_: record_["date"])
+    return EODCandle(
+        date=record_["date"],
+        open=record_["open"],
+        high=record_["high"],
+        low=record_["low"],
+        close=record_["close"],
+        adjusted_close=record_["adjusted_close"],
+        volume=record_["volume"],
+    )
 
 
 if __name__ == "__main__":
