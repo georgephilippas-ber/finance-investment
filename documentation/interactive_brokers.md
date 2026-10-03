@@ -68,7 +68,7 @@ Labels differ from field names: `net_liquidation` is printed as **Portfolio mark
 ```python
 def print_positions(positions: List[PortfolioPosition]) -> None
 ```
-Prints one row per position and a row count. Columns: Opened, Symbol, Exchange, Currency, Trading class, Quantity, Average cost, Total cost, Market price, Market value, Unrealized PnL, Realized PnL, Return (`unrealized_hpr`), Annual Return (`unrealized_annualized_return`), Contract ID. Missing values are shown as `-`.
+Prints one row per position and a row count. Columns: Contract ID, Opened, Symbol, Exchange, Quantity, Total cost, Market price, Market value, Unrealized PnL, Return (`unrealized_hpr`), Annual Return (`unrealized_annualized_return`). Missing values are shown as `-`.
 
 ### `print_full_account_information`
 ```python

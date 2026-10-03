@@ -444,31 +444,26 @@ async def get_positions_as_security_information(
 
 
 def print_positions(positions: List[PortfolioPosition]) -> None:
-    headers_: List[str] = ["Opened", "Symbol", "Exchange", "Currency", "Trading class", "Quantity", "Average cost",
-                           "Total cost", "Market price", "Market value", "Unrealized PnL", "Realized PnL", "Return",
-                           "Annual Return", "Contract ID"]
+    headers_: List[str] = ["Contract ID", "Opened", "Symbol", "Exchange", "Quantity", "Total cost", "Market price",
+                           "Market value", "Unrealized PnL", "Return", "Annual Return"]
     rows_: List[List[str]] = [
         [
+            str(position_.contract_id),
             position_.opened.isoformat() if position_.opened is not None else "-",
             position_.symbol,
             position_.exchange,
-            position_.currency,
-            position_.trading_class,
             format(position_.quantity, ",f"),
-            format(position_.average_cost, ",f"),
             format(position_.total_cost, ",f"),
             format(position_.market_price, ",f"),
             format(position_.market_value, ",f"),
             format(position_.unrealized_pnl, ",f"),
-            format(position_.realized_pnl, ",f"),
             format(position_.unrealized_hpr, ".2%") if position_.unrealized_hpr is not None else "-",
             format(position_.unrealized_annualized_return, ".2%")
             if position_.unrealized_annualized_return is not None else "-",
-            str(position_.contract_id),
         ]
         for position_ in positions
     ]
-    print_table(headers_, rows_, first_right_aligned_column=5)
+    print_table(headers_, rows_, first_right_aligned_column=4)
     print(f"({len(rows_)} {'row' if len(rows_) == 1 else 'rows'})")
 
 
