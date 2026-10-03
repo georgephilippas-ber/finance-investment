@@ -50,27 +50,3 @@ class PortfolioPosition:
     opened: Optional[date]
     unrealized_annualized_return: Optional[Decimal]
     contract_id: int
-
-
-
-@dataclass
-class LiquidationEstimate:
-    contract_id: int
-    symbol: str
-    currency: str
-    quantity: Decimal
-    market_price: Decimal
-    limit_price: Decimal
-    gross_proceeds: Decimal
-    commission: Decimal
-    net_proceeds: Decimal
-
-
-@dataclass
-class LiquidationSummary:
-    account: str
-    currency: str
-    cash: Decimal
-    positions: List[LiquidationEstimate]
-    net_proceeds: Decimal
-    cash_after_liquidation: Decimal

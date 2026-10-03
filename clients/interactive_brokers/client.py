@@ -1,11 +1,11 @@
 from asyncio import wait_for
 from datetime import date
-from decimal import ROUND_CEILING, ROUND_FLOOR, ROUND_HALF_UP, Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from sqlite3 import OperationalError
 from typing import List, Optional, Tuple
 
 from babel.numbers import format_compact_currency, format_currency
-from ib_async import IB, AccountValue, Contract, ContractDetails, LimitOrder, OrderState, PortfolioItem
+from ib_async import IB, AccountValue, Contract, PortfolioItem
 from ib_async.util import UNSET_DOUBLE
 
 from clients.common.domain import Provider, SecurityInformation
@@ -13,15 +13,15 @@ from printing import print_table
 
 if __package__:
     from . import configuration, position_tracker
-    from .domain import AccountInfo, AccountInformation, LiquidationEstimate, LiquidationSummary, PortfolioPosition
+    from .domain import AccountInfo, AccountInformation, PortfolioPosition
 else:
     import configuration
     import position_tracker
-    from domain import AccountInfo, AccountInformation, LiquidationEstimate, LiquidationSummary, PortfolioPosition
+    from domain import AccountInfo, AccountInformation, PortfolioPosition
 
 __all__ = ["AccountInformation", "PortfolioPosition", "connect", "disconnect", "get_account_information",
-           "get_positions", "print_account_information", "print_full_account_information", "print_positions",
-           "get_positions_as_security_information"]
+           "get_commission", "get_positions", "print_account_information", "print_full_account_information",
+           "print_positions", "get_positions_as_security_information"]
 
 
 def _get_account_pnl(info: AccountInfo, tag: str, currency: str) -> Decimal:
@@ -255,129 +255,49 @@ def disconnect(ib: IB) -> None:
     ib.disconnect()
 
 
+def get_commission(quantity: Decimal, price: Decimal, currency: str) -> Decimal:
+    shares_ = abs(quantity)
+    value_ = shares_ * price
+    match currency:
+        case "EUR":
+            commission_ = max(Decimal(3), value_ * Decimal("0.0005"))
+        case "USD":
+            commission_ = min(max(Decimal(1), shares_ * Decimal("0.005")), value_ * Decimal("0.01"))
+        case _:
+            raise LookupError()
+    return commission_.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+def _get_liquidation_proceeds(items: List[PortfolioItem], currency: str) -> Optional[Decimal]:
+    proceeds_ = Decimal(0)
+    for item_ in items:
+        if not item_.position:
+            continue
+        price_ = Decimal(str(item_.marketPrice))
+        value_ = Decimal(str(item_.marketValue))
+        if item_.contract.currency != currency or not price_.is_finite() or not value_.is_finite():
+            return None
+        try:
+            commission_ = get_commission(Decimal(str(item_.position)), price_, item_.contract.currency)
+        except LookupError:
+            return None
+        proceeds_ += value_ - commission_
+    return proceeds_
+
+
 async def get_account_information(
         ib: IB,
         account: Optional[str] = None,
         *,
-        limit_discount: Decimal = Decimal(0),
         timeout: float = 50,
 ) -> AccountInformation:
     information_ = _to_account_information(await _get_account_info(ib, account, timeout=timeout))
-    liquidation_ = await _simulate_liquidation(ib, information_, limit_discount, timeout=timeout)
-    information_.liquidation_value = liquidation_.cash_after_liquidation
-    if information_.total_cost is not None:
-        information_.net_return = _get_return(liquidation_.net_proceeds - information_.total_cost,
-                                              information_.total_cost)
+    proceeds_ = _get_liquidation_proceeds(_get_positions(ib, information_.account), information_.currency)
+    if proceeds_ is not None:
+        information_.liquidation_value = information_.total_cash + proceeds_
+        if information_.total_cost is not None:
+            information_.net_return = _get_return(proceeds_ - information_.total_cost, information_.total_cost)
     return information_
-
-
-async def _round_to_tick(
-        ib: IB,
-        details: ContractDetails,
-        price: Decimal,
-        rounding: str,
-        *,
-        timeout: float,
-) -> Decimal:
-    exchanges_ = details.validExchanges.split(",")
-    rule_ids_ = details.marketRuleIds.split(",")
-    if len(exchanges_) != len(rule_ids_):
-        raise LookupError()
-    rules_ = {exchange_: int(rule_id_) for exchange_, rule_id_ in zip(exchanges_, rule_ids_)}
-    if details.contract.exchange not in rules_:
-        raise LookupError()
-
-    increments_ = await wait_for(ib.reqMarketRuleAsync(rules_[details.contract.exchange]), timeout=timeout)
-    if not increments_:
-        raise LookupError()
-    tick_ = max(
-        (increment_ for increment_ in increments_ if Decimal(str(increment_.lowEdge)) <= price),
-        key=lambda increment_: increment_.lowEdge,
-    ).increment
-    tick_ = Decimal(str(tick_))
-
-    return (price / tick_).quantize(Decimal(1), rounding=rounding) * tick_
-
-
-async def _simulate_position_liquidation(
-        ib: IB,
-        item: PortfolioItem,
-        limit_discount: Decimal,
-        *,
-        timeout: float,
-) -> LiquidationEstimate:
-    quantity_ = Decimal(str(item.position))
-    market_price_ = Decimal(str(item.marketPrice))
-    if not market_price_.is_finite() or market_price_ <= 0:
-        raise ValueError()
-
-    details_: List[ContractDetails] = await wait_for(
-        ib.reqContractDetailsAsync(Contract(conId=item.contract.conId, exchange="SMART")),
-        timeout=timeout)
-
-    if len(details_) != 1:
-        raise LookupError()
-
-    selling_ = quantity_ > 0
-    limit_price_ = await _round_to_tick(
-        ib,
-        details_[0],
-        market_price_ * (1 - limit_discount if selling_ else 1 + limit_discount),
-        ROUND_FLOOR if selling_ else ROUND_CEILING,
-        timeout=timeout,
-    )
-    order_ = LimitOrder("SELL" if selling_ else "BUY", float(abs(quantity_)), float(limit_price_), tif="DAY")
-
-    state_ = await wait_for(ib.whatIfOrderAsync(details_[0].contract, order_), timeout=timeout)
-
-    if not isinstance(state_, OrderState) or state_.commission == UNSET_DOUBLE:
-        raise LookupError()
-    if state_.commissionCurrency != item.contract.currency:
-        raise ValueError()
-
-    gross_proceeds_ = quantity_ * limit_price_
-    commission_ = Decimal(str(state_.commission))
-    return LiquidationEstimate(
-        contract_id=item.contract.conId,
-        symbol=item.contract.symbol,
-        currency=item.contract.currency,
-        quantity=quantity_,
-        market_price=market_price_,
-        limit_price=limit_price_,
-        gross_proceeds=gross_proceeds_,
-        commission=commission_,
-        net_proceeds=gross_proceeds_ - commission_,
-    )
-
-
-async def _simulate_liquidation(
-        ib: IB,
-        information: AccountInformation,
-        limit_discount: Decimal,
-        *,
-        timeout: float,
-) -> LiquidationSummary:
-    if not Decimal(0) <= limit_discount < Decimal(1):
-        raise ValueError()
-
-    estimates_ = [
-        await _simulate_position_liquidation(ib, item_, limit_discount, timeout=timeout)
-        for item_ in _get_positions(ib, information.account)
-        if item_.position
-    ]
-    currencies_ = {estimate_.currency for estimate_ in estimates_} - {information.currency}
-    if currencies_:
-        raise ValueError()
-
-    net_proceeds_ = sum((estimate_.net_proceeds for estimate_ in estimates_), Decimal(0))
-    return LiquidationSummary(
-        account=information.account,
-        currency=information.currency,
-        cash=information.total_cash,
-        positions=estimates_,
-        net_proceeds=net_proceeds_,
-        cash_after_liquidation=information.total_cash + net_proceeds_,
-    )
 
 
 def _get_return(pnl: Decimal, cost: Decimal) -> Optional[Decimal]:
@@ -500,9 +420,7 @@ async def print_full_account_information(
         ib: IB,
         account: Optional[str] = None,
         *,
-        limit_discount: Decimal = Decimal(0),
         timeout: float = 50,
 ) -> None:
-    print_account_information(await get_account_information(ib, account, limit_discount=limit_discount,
-                                                            timeout=timeout))
+    print_account_information(await get_account_information(ib, account, timeout=timeout))
     print_positions(get_positions(ib, account))

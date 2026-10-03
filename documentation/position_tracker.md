@@ -1,12 +1,18 @@
 # Position tracker
 
-`clients/interactive_brokers/position_tracker.py` — records when each position was opened, which IBKR does not report. Each purchase is a [`Lot`](domain.md#lot): contract ID, open date and quantity.
+`clients/interactive_brokers/position_tracker.py` — manually records opening dates, which are absent from the
+portfolio snapshot used by this client. Each [`Lot`](domain.md#lot) stores a contract ID, open date and quantity;
+one row represents the total recorded for that contract on that date.
 
 - Stored in SQLite at `domain/positions/positions.sqlite`, table `position_tracker`, keyed on (contract ID, open date).
-- **Contract IDs are encrypted** with AES-SIV before they are stored, using the key in `IBKR_POSITION_TRACKER_KEY` (`.env`, read by `configuration.position_tracker_key()`). Encryption is deterministic, so lookups by contract ID work; a wrong key fails with `InvalidTag`.
+- **Contract IDs are encrypted** with AES-SIV before they are stored, using `IBKR_POSITION_TRACKER_KEY` from the
+  environment. Encryption is deterministic, so lookups by contract ID work. With a different valid key,
+  `by_contract_id` normally finds no matching rows; `all()` raises `InvalidTag` when it tries to decrypt existing
+  rows encrypted with the original key. A malformed key can raise a decoding or key-length error.
 - **Open dates and quantities are not encrypted.** Rows of the same contract share the same encrypted ID.
 - **Back up the key** outside the project: without it the stored contract IDs cannot be recovered.
-- Call `load_dotenv()` before using the tracker so the key is available.
+- Set the key in the environment, or call `load_dotenv()` before using the tracker. The configuration function
+  does not load `.env` itself. Reuse the existing database's key; generating a new key does not re-encrypt old rows.
 
 [`get_positions`](interactive_brokers.md#get_positions) reads the tracker to fill `PortfolioPosition.opened` and `unrealized_annualized_return`.
 
@@ -42,4 +48,19 @@ All methods are static and work on the database at the module's `DEFAULT_PATH`.
 | `all` | Every lot as a DataFrame with `contract_id`, `opened`, `quantity` (as `int`, `date`, `Decimal`), sorted by contract and date; empty frame with those columns when there are none. |
 | `quantity` | Sum of the contract's lot sizes — compare with IBKR's position quantity to spot unrecorded purchases. |
 
-Running the module (`python3 -m clients.interactive_brokers.position_tracker`) executes its `_main`, which **replaces all stored lots** with the ones listed there and prints them.
+## Keeping lots consistent
+
+The tracker does not import executions or adjust lots for sales, splits, or transfers. Maintain the remaining
+quantities manually and compare `quantity(contract_id)` with the broker position. `get_positions` does not
+perform that comparison before calculating the annualized estimate. Input dates and quantities are not
+validated for future dates, positive quantities, or consistency with broker holdings.
+
+Rows have no account ID, so holdings of the same contract in different accounts share the same tracker data.
+The tracker stores no purchase prices, commissions, or dividend cash flows.
+
+## Running the module
+
+From the project root, `python3 -m clients.interactive_brokers.position_tracker` loads `.env`, prints all stored
+lots, then prints the lookup for the hard-coded contract ID in `_main`. It does not insert, replace, or delete
+lots, and it does not initialize the table. An existing table and the matching encryption key are required
+to read stored data.

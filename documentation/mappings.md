@@ -42,13 +42,15 @@ class SecurityInformationMapping:
 
 1. Rejects input that is not `Provider.EODHD` or has no ISIN (`ValueError`).
 2. Collects every IBKR code (main and other) of all MICs with that EODHD code. One EODHD code can span several MICs: `US` → XNAS, XNYS, XCBO, OTCM → `NASDAQ`, `NYSE`, `ARCA`, `AMEX`, `BATS`, `PINK`. None → `LookupError`.
-3. Requests IBKR contract details for the ISIN (`secType="STK"`, `secIdType="ISIN"`), which returns every listing and routing venue.
+3. Requests IBKR contract details for the ISIN (`secType="STK"`, `secIdType="ISIN"`) and examines the returned contracts.
 4. Keeps contracts in the same currency whose **primary exchange** is one of the collected codes, de-duplicated by contract ID, and requires exactly one (`LookupError` otherwise).
 5. Returns IBKR's `symbol`, the primary exchange as `exchange`, and the `contract_id`.
 
 ### Behaviour and limits
 
-- **Round trip.** IBKR → EODHD → IBKR returns an identical object for primary listings (verified for SAP and Volkswagen `VOW3` on Xetra / IBIS; AAPL from EODHD resolves to NASDAQ, contract 265598).
+- **Round trip.** Both directions resolve the security again using provider data. An identical object is not
+  guaranteed: the return path selects IBKR's primary exchange and symbol, which can normalize source aliases.
+  A missing or ambiguous match raises `LookupError`.
 - **Primary listings only towards IBKR.** IBKR is matched on the primary exchange, so an EODHD listing on a secondary venue (e.g. `F` Frankfurt for a German stock whose primary is Xetra) finds no match.
 - **Mapping coverage.** Exchanges without IBKR codes in the JSON (e.g. TSX Venture, Hamburg) cannot be converted in either direction.
 - **ISIN quality.** EODHD records occasionally lack an ISIN, and a security whose ISIN changed (e.g. after a merger) matches only under the current one.
