@@ -26,6 +26,10 @@ class AccountInformation:
     maintenance_margin: Decimal
     unrealized_pnl: Decimal
     realized_pnl: Decimal
+    total_cost: Optional[Decimal] = None
+    gross_return: Optional[Decimal] = None
+    net_return: Optional[Decimal] = None
+    liquidation_value: Optional[Decimal] = None
 
 
 @dataclass
@@ -52,3 +56,26 @@ class SecurityInformation:
     currency: str
     isin: Optional[str] = None
     contract_id: Optional[int] = None
+
+
+@dataclass
+class LiquidationEstimate:
+    contract_id: int
+    symbol: str
+    currency: str
+    quantity: Decimal
+    market_price: Decimal
+    limit_price: Decimal
+    gross_proceeds: Decimal
+    commission: Decimal
+    net_proceeds: Decimal
+
+
+@dataclass
+class LiquidationSummary:
+    account: str
+    currency: str
+    cash: Decimal
+    positions: List[LiquidationEstimate]
+    net_proceeds: Decimal
+    cash_after_liquidation: Decimal
