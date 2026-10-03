@@ -424,4 +424,5 @@ async def print_full_account_information(
         timeout: float = 50,
 ) -> None:
     print_account_information(await get_account_information(ib, account, timeout=timeout))
+    print()
     print_positions(get_positions(ib, account))
