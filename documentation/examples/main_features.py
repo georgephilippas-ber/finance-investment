@@ -14,6 +14,8 @@ from clients.interactive_brokers.client import (connect, disconnect, get_positio
                                                 print_full_account_information)
 from printing import print_section, print_subsection
 
+__all__ = ["features"]
+
 
 def _exchanges() -> None:
     print_section("Exchanges")
@@ -44,9 +46,6 @@ async def _ibkr() -> None:
         return
 
     try:
-        print_subsection("account and positions")
-        await print_full_account_information(ib)
-
         print_subsection("positions → EODHD → latest close")
         for security_ in await get_positions_as_security_information(ib):
             eodhd_ = SecurityInformationMapping.from_ibkr_to_eodhd(security_)
@@ -59,11 +58,14 @@ async def _ibkr() -> None:
             ibkr_ = await SecurityInformationMapping.from_eodhd_to_ibkr(ib, eodhd_)
             print(f"{eodhd_.symbol}.{eodhd_.exchange} (EODHD) → {ibkr_.symbol} on {ibkr_.exchange}, "
                   f"contract {ibkr_.contract_id} (IBKR)")
+
+        print_subsection("positions and account summary")
+        await print_full_account_information(ib)
     finally:
         disconnect(ib)
 
 
-async def _main() -> None:
+async def features() -> None:
     load_dotenv(ROOT / ".env")
     _exchanges()
     _eodhd_lookup()
@@ -71,4 +73,4 @@ async def _main() -> None:
 
 
 if __name__ == "__main__":
-    run(_main())
+    run(features())

@@ -47,14 +47,14 @@ account figures (net liquidation, cash, PnL) are already in the base currency.
 
 ## Running
 
-The quickest way to see everything working is the [example](#example):
+From the project root:
 
 ```bash
-python3 documentation/examples/main_features.py
+python3 main.py
 ```
 
-`main.py` is the project's own entry point. Scripts under `research/` run as modules from the project root, e.g.
-`python3 -m research.main`.
+runs `features()` from the [example](#example), which shows everything working end to end. Scripts under `research/`
+run as modules from the project root, e.g. `python3 -m research.main`.
 
 ## Typical flow
 

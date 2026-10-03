@@ -73,4 +73,4 @@ Prints one row per position (symbol, exchange, currency, trading class, quantity
 ```python
 async def print_full_account_information(ib: IB, account: Optional[str] = None, *, limit_discount: Decimal = Decimal(0), timeout: float = 50) -> None
 ```
-Fetches and prints both tables: `get_account_information` → `print_account_information`, then `get_positions` → `print_positions`. Parameters are passed through.
+Fetches and prints both tables: `get_positions` → `print_positions`, then `get_account_information` → `print_account_information`, so the account summary comes last. Parameters are passed through.

@@ -469,6 +469,6 @@ async def print_full_account_information(
         limit_discount: Decimal = Decimal(0),
         timeout: float = 50,
 ) -> None:
+    print_positions(get_positions(ib, account))
     print_account_information(await get_account_information(ib, account, limit_discount=limit_discount,
                                                             timeout=timeout))
-    print_positions(get_positions(ib, account))
