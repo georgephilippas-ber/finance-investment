@@ -43,7 +43,7 @@ Returns an [`AccountInformation`](domain.md#accountinformation) in the account's
 ```python
 def get_positions(ib: IB, account: Optional[str] = None) -> List[PortfolioPosition]
 ```
-Open positions as [`PortfolioPosition`](domain.md#portfolioposition)s: quantity, cost, IBKR market price and value, PnL and return. Reads the portfolio already streamed to the session; no extra request.
+Open positions as [`PortfolioPosition`](domain.md#portfolioposition)s: quantity, cost, IBKR market price and value, PnL, holding-period return, and — from the position tracker — open date and annualized return (only after a year). Reads the portfolio already streamed to the session; no extra IBKR request. Without a tracker database, key or entry for a contract, the open date and annualized return are `None`.
 
 ### `get_positions_as_security_information`
 ```python
@@ -67,7 +67,7 @@ Labels differ from field names: `net_liquidation` is printed as **Portfolio mark
 ```python
 def print_positions(positions: List[PortfolioPosition]) -> None
 ```
-Prints one row per position (symbol, exchange, currency, trading class, quantity, costs, market price and value, PnL, return, contract ID) and a row count.
+Prints one row per position (symbol, exchange, currency, trading class, quantity, costs, market price and value, PnL, return, annual return, contract ID), with the open date as the first column, and a row count. Missing values are shown as `-`.
 
 ### `print_full_account_information`
 ```python

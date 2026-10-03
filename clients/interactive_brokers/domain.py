@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 from typing import List, Optional
 
@@ -45,7 +46,9 @@ class PortfolioPosition:
     market_value: Decimal
     unrealized_pnl: Decimal
     realized_pnl: Decimal
-    unrealized_return: Optional[Decimal]
+    unrealized_hpr: Optional[Decimal]
+    opened: Optional[date]
+    unrealized_annualized_return: Optional[Decimal]
     contract_id: int
 
 

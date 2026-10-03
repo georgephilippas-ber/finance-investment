@@ -1,6 +1,8 @@
 from asyncio import wait_for
+from datetime import date
 from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
-from typing import List, Optional
+from sqlite3 import OperationalError
+from typing import List, Optional, Tuple
 
 from ib_async import IB, AccountValue, Contract, ContractDetails, LimitOrder, OrderState, PortfolioItem
 from ib_async.util import UNSET_DOUBLE
@@ -9,10 +11,11 @@ from clients.common.domain import Provider, SecurityInformation
 from printing import print_table
 
 if __package__:
-    from . import configuration
+    from . import configuration, position_tracker
     from .domain import AccountInfo, AccountInformation, LiquidationEstimate, LiquidationSummary, PortfolioPosition
 else:
     import configuration
+    import position_tracker
     from domain import AccountInfo, AccountInformation, LiquidationEstimate, LiquidationSummary, PortfolioPosition
 
 __all__ = ["AccountInformation", "PortfolioPosition", "connect", "disconnect", "get_account_information",
@@ -380,12 +383,38 @@ def _get_return(pnl: Decimal, cost: Decimal) -> Optional[Decimal]:
     return pnl / abs(cost) if cost else None
 
 
+def _get_holding(contract_id: int) -> Tuple[Optional[date], Optional[Decimal]]:
+    if not position_tracker.DEFAULT_PATH.exists():
+        return None, None
+    try:
+        lots_ = position_tracker.PositionTracker.by_contract_id(contract_id)
+    except (OperationalError, RuntimeError):
+        return None, None
+    quantity_ = sum((lot_.quantity for lot_ in lots_), Decimal(0))
+    if not lots_ or quantity_ <= 0:
+        return (min(lot_.opened for lot_ in lots_) if lots_ else None), None
+
+    today_ = date.today()
+    days_ = sum((lot_.quantity * (today_ - lot_.opened).days for lot_ in lots_), Decimal(0)) / quantity_
+    return min(lot_.opened for lot_ in lots_), days_
+
+
+def _get_annualized_return(hpr: Optional[Decimal], days: Optional[Decimal]) -> Optional[Decimal]:
+    if hpr is None or days is None or days < 365 or hpr <= -1:
+        return None
+    return (1 + hpr) ** (Decimal(365) / days) - 1
+
+
 def get_positions(
         ib: IB,
         account: Optional[str] = None,
 ) -> List[PortfolioPosition]:
-    return [
-        PortfolioPosition(
+    positions_: List[PortfolioPosition] = []
+    for position_ in _get_positions(ib, account):
+        total_cost_ = Decimal(str(position_.position)) * Decimal(str(position_.averageCost))
+        hpr_ = _get_return(Decimal(str(position_.unrealizedPNL)), total_cost_)
+        opened_, days_ = _get_holding(position_.contract.conId)
+        positions_.append(PortfolioPosition(
             contract_id=position_.contract.conId,
             symbol=position_.contract.symbol,
             exchange=position_.contract.primaryExchange or position_.contract.exchange,
@@ -393,18 +422,16 @@ def get_positions(
             trading_class=position_.contract.tradingClass,
             quantity=Decimal(str(position_.position)),
             average_cost=Decimal(str(position_.averageCost)),
-            total_cost=Decimal(str(position_.position)) * Decimal(str(position_.averageCost)),
+            total_cost=total_cost_,
             market_price=Decimal(str(position_.marketPrice)),
             market_value=Decimal(str(position_.marketValue)),
             unrealized_pnl=Decimal(str(position_.unrealizedPNL)),
             realized_pnl=Decimal(str(position_.realizedPNL)),
-            unrealized_return=_get_return(
-                Decimal(str(position_.unrealizedPNL)),
-                Decimal(str(position_.position)) * Decimal(str(position_.averageCost)),
-            ),
-        )
-        for position_ in _get_positions(ib, account)
-    ]
+            unrealized_hpr=hpr_,
+            opened=opened_,
+            unrealized_annualized_return=_get_annualized_return(hpr_, days_),
+        ))
+    return positions_
 
 
 async def get_positions_as_security_information(
@@ -417,11 +444,12 @@ async def get_positions_as_security_information(
 
 
 def print_positions(positions: List[PortfolioPosition]) -> None:
-    headers_: List[str] = ["Symbol", "Exchange", "Currency", "Trading class", "Quantity", "Average cost", "Total cost",
-                           "Market price", "Market value", "Unrealized PnL", "Realized PnL", "Return",
-                           "Contract ID"]
+    headers_: List[str] = ["Opened", "Symbol", "Exchange", "Currency", "Trading class", "Quantity", "Average cost",
+                           "Total cost", "Market price", "Market value", "Unrealized PnL", "Realized PnL", "Return",
+                           "Annual Return", "Contract ID"]
     rows_: List[List[str]] = [
         [
+            position_.opened.isoformat() if position_.opened is not None else "-",
             position_.symbol,
             position_.exchange,
             position_.currency,
@@ -433,12 +461,14 @@ def print_positions(positions: List[PortfolioPosition]) -> None:
             format(position_.market_value, ",f"),
             format(position_.unrealized_pnl, ",f"),
             format(position_.realized_pnl, ",f"),
-            format(position_.unrealized_return, ".2%") if position_.unrealized_return is not None else "",
+            format(position_.unrealized_hpr, ".2%") if position_.unrealized_hpr is not None else "-",
+            format(position_.unrealized_annualized_return, ".2%")
+            if position_.unrealized_annualized_return is not None else "-",
             str(position_.contract_id),
         ]
         for position_ in positions
     ]
-    print_table(headers_, rows_, first_right_aligned_column=4)
+    print_table(headers_, rows_, first_right_aligned_column=5)
     print(f"({len(rows_)} {'row' if len(rows_) == 1 else 'rows'})")
 
 

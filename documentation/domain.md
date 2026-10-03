@@ -101,7 +101,9 @@ class PortfolioPosition:
     market_value: Decimal
     unrealized_pnl: Decimal
     realized_pnl: Decimal
-    unrealized_return: Optional[Decimal]
+    unrealized_hpr: Optional[Decimal]
+    opened: Optional[date]
+    unrealized_annualized_return: Optional[Decimal]
     contract_id: int
 ```
 One open position.
@@ -110,7 +112,9 @@ One open position.
 - `average_cost` — per share, buy commission included; `total_cost` = `quantity` × `average_cost`.
 - `market_price`, `market_value` — IBKR's valuation price and value (not necessarily the official close).
 - `unrealized_pnl`, `realized_pnl` — position PnL.
-- `unrealized_return` — `unrealized_pnl / |total_cost|`; `None` when the cost is zero.
+- `unrealized_hpr` — unrealized holding-period return, `unrealized_pnl / |total_cost|` (not annualized); `None` when the cost is zero.
+- `opened` — earliest open date recorded for the contract in the position tracker; `None` if it has no lots there.
+- `unrealized_annualized_return` — geometric annualization of `unrealized_hpr`: (1 + HPR)^(365 / days) − 1, where days is the quantity-weighted average holding period of the tracked lots. `None` for holdings shorter than 365 days (not annualized, by convention) or without tracked lots.
 
 ## Internal
 
