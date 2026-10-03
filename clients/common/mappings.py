@@ -22,9 +22,3 @@ def augmented_exchanges_database_ibkr(exchanges: DataFrame) -> DataFrame:
         ibkr_exchange=codes_.map(lambda codes: codes[0] if codes else ""),
         ibkr_other_exchanges=codes_.map(lambda codes: tuple(codes[1:])),
     )
-
-
-if __name__ == "__main__":
-    from clients.eodhd.client import read_exchanges_database
-
-    print(augmented_exchanges_database_ibkr(read_exchanges_database()))

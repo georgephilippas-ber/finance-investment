@@ -3,7 +3,8 @@ from pprint import pprint
 
 from dotenv import load_dotenv
 
-from clients.eodhd.client import get_symbols_by_ticker, get_symbols_by_isin
+from clients.common.mappings import augmented_exchanges_database_ibkr
+from clients.eodhd.client import get_symbols_by_ticker, get_symbols_by_isin, read_exchanges_database
 from clients.interactive_brokers.client import (SecurityInformation, connect, disconnect, fill_isin,
                                                 get_account_information, get_positions, print_positions)
 
@@ -33,5 +34,7 @@ if __name__ == "__main__":
 
     for s in enumerate(get_symbols_by_isin("DE000A0F5UJ7", currency="EUR")):
         print(s)
+
+    print(augmented_exchanges_database_ibkr(read_exchanges_database()).to_string(index=False))
 
     run(_ibkr_main())
