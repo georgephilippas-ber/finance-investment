@@ -323,6 +323,7 @@ def print_positions(positions: List[PortfolioPosition]) -> None:
 def print_account_information(information: AccountInformation) -> None:
     rows_: List[List[str]] = [
         ["Net liquidation", format(information.net_liquidation, ",f")],
+        ["Unrealized PnL", format(information.unrealized_pnl, ",f")],
         ["Account", information.account],
         ["Currency", information.currency],
         ["Total cash", format(information.total_cash, ",f")],
@@ -330,7 +331,6 @@ def print_account_information(information: AccountInformation) -> None:
         ["Available funds", format(information.available_funds, ",f")],
         ["Excess liquidity", format(information.excess_liquidity, ",f")],
         ["Maintenance margin", format(information.maintenance_margin, ",f")],
-        ["Unrealized PnL", format(information.unrealized_pnl, ",f")],
         ["Realized PnL", format(information.realized_pnl, ",f")],
     ]
-    _print_table(["Field", "Value"], rows_, first_right_aligned_column=1, separators_after=(0,))
+    _print_table(["Field", "Value"], rows_, first_right_aligned_column=1, separators_after=(1,))
