@@ -9,15 +9,17 @@ from typing import Optional, List, Dict
 import requests
 from pandas import DataFrame, read_sql_query
 
+from clients.common.domain import Provider, SecurityInformation
+
 if __package__:
     from .configuration import CACHE_DIRECTORY
-    from .domain import EODCandle, SecurityInformation, Symbol
+    from .domain import EndOfDayPrice, Symbol
 else:
     from configuration import CACHE_DIRECTORY
-    from clients.eodhd.domain import EODCandle, SecurityInformation, Symbol
+    from clients.eodhd.domain import EndOfDayPrice, Symbol
 
 
-def api_key() -> str:
+def _api_key() -> str:
     key_: Optional[str] = os.getenv("EODHD_API_KEY")
 
     if not key_:
@@ -26,7 +28,7 @@ def api_key() -> str:
     return key_.strip()
 
 
-def get_exchanges(load_from_cache: bool = True) -> List[Dict]:
+def _get_exchanges(load_from_cache: bool = True) -> List[Dict]:
     filename_ = CACHE_DIRECTORY / "exchanges.json"
 
     if load_from_cache and filename_.is_file():
@@ -35,7 +37,7 @@ def get_exchanges(load_from_cache: bool = True) -> List[Dict]:
 
     response = requests.get(
         "https://eodhd.com/api/exchanges-list/",
-        params={"api_token": api_key()},
+        params={"api_token": _api_key()},
         timeout=30,
     )
 
@@ -53,8 +55,8 @@ def get_exchanges(load_from_cache: bool = True) -> List[Dict]:
     return response_
 
 
-def create_exchanges_database(load_from_cache: bool = True) -> Path:
-    exchanges_ = get_exchanges(load_from_cache=load_from_cache)
+def _create_exchanges_database(load_from_cache: bool = True) -> Path:
+    exchanges_ = _get_exchanges(load_from_cache=load_from_cache)
     directory_ = Path(__file__).resolve().parents[2] / "domain" / "exchanges"
 
     with (directory_ / "us_operating_mic_mapping.json").open(encoding="utf-8") as file_:
@@ -163,7 +165,7 @@ def get_symbols_by_ticker(
 
     response = requests.get(
         f"https://eodhd.com/api/exchange-symbol-list/{exchange_}",
-        params={"symbols": ticker_, "fmt": "json", "api_token": api_key()},
+        params={"symbols": ticker_, "fmt": "json", "api_token": _api_key()},
         timeout=30,
     )
     response.raise_for_status()
@@ -192,7 +194,7 @@ def get_symbols_by_isin(isin: str, *, currency: str) -> List[Symbol]:
 
     response = requests.get(
         f"https://eodhd.com/api/search/{isin}",
-        params={"limit": 500, "fmt": "json", "api_token": api_key()},
+        params={"limit": 500, "fmt": "json", "api_token": _api_key()},
         timeout=30,
     )
     response.raise_for_status()
@@ -242,7 +244,7 @@ def get_symbols_in_exchange(exchange: str, load_from_cache: bool = True) -> List
     else:
         response = requests.get(
             f"https://eodhd.com/api/exchange-symbol-list/{eodhd_code}",
-            params={"fmt": "json", "api_token": api_key()},
+            params={"fmt": "json", "api_token": _api_key()},
             timeout=30,
         )
         response.raise_for_status()
@@ -273,13 +275,16 @@ def get_symbols_in_exchange(exchange: str, load_from_cache: bool = True) -> List
     return symbols_
 
 
-def latest_candle(security: SecurityInformation, *, lookback_days: int = 14) -> EODCandle:
+def latest_price(security: SecurityInformation, *, lookback_days: int = 14) -> EndOfDayPrice:
+    if security.provider is not Provider.EODHD:
+        raise ValueError()
+
     response = requests.get(
-        f"https://eodhd.com/api/eod/{security.ticker}.{security.exchange}",
+        f"https://eodhd.com/api/eod/{security.symbol}.{security.exchange}",
         params={
             "from": (date.today() - timedelta(days=lookback_days)).isoformat(),
             "fmt": "json",
-            "api_token": api_key(),
+            "api_token": _api_key(),
         },
         timeout=30,
     )
@@ -291,7 +296,7 @@ def latest_candle(security: SecurityInformation, *, lookback_days: int = 14) -> 
         raise LookupError()
 
     record_ = max(records_, key=lambda record_: record_["date"])
-    return EODCandle(
+    return EndOfDayPrice(
         date=record_["date"],
         open=record_["open"],
         high=record_["high"],

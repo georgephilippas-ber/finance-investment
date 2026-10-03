@@ -14,7 +14,7 @@ class Symbol:
 
 
 @dataclass
-class EODCandle:
+class EndOfDayPrice:
     date: str
     open: float
     high: float
@@ -22,11 +22,3 @@ class EODCandle:
     close: float
     adjusted_close: float
     volume: int
-
-
-@dataclass
-class SecurityInformation:
-    ticker: str
-    exchange: str
-    isin: str
-    currency: str

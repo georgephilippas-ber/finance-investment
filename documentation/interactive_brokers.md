@@ -41,7 +41,7 @@ Open positions with quantity, average cost, total cost, market price/value, real
 ```python
 async def positions_to_security_information(ib: IB, positions: List[PortfolioPosition], *, timeout: float = 50) -> List[SecurityInformation]
 ```
-Converts each `PortfolioPosition` into a `SecurityInformation` (same order) and fills its ISIN (and contract ID) from IBKR's contract details. Raises `LookupError` when there is no or more than one matching contract, or not exactly one ISIN.
+Converts each `PortfolioPosition` into a `Provider.IBKR` `SecurityInformation` (same order) and fills its ISIN (and contract ID) from IBKR's contract details. Raises `LookupError` when there is no or more than one matching contract, or not exactly one ISIN.
 
 ## `print_account_information`
 ```python

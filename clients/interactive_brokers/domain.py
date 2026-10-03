@@ -49,14 +49,6 @@ class PortfolioPosition:
     contract_id: int
 
 
-@dataclass
-class SecurityInformation:
-    symbol: str
-    exchange: str
-    currency: str
-    isin: Optional[str] = None
-    contract_id: Optional[int] = None
-
 
 @dataclass
 class LiquidationEstimate:

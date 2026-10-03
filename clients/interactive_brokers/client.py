@@ -5,18 +5,17 @@ from typing import List, Optional, Sequence
 from ib_async import IB, AccountValue, Contract, ContractDetails, LimitOrder, OrderState, PortfolioItem
 from ib_async.util import UNSET_DOUBLE
 
+from clients.common.domain import Provider, SecurityInformation
+
 if __package__:
     from . import configuration
-    from .domain import (AccountInfo, AccountInformation, LiquidationEstimate, LiquidationSummary, PortfolioPosition,
-                         SecurityInformation)
+    from .domain import AccountInfo, AccountInformation, LiquidationEstimate, LiquidationSummary, PortfolioPosition
 else:
     import configuration
-    from domain import (AccountInfo, AccountInformation, LiquidationEstimate, LiquidationSummary, PortfolioPosition,
-                        SecurityInformation)
+    from domain import AccountInfo, AccountInformation, LiquidationEstimate, LiquidationSummary, PortfolioPosition
 
 __all__ = ["AccountInformation", "PortfolioPosition", "connect", "disconnect", "get_account_information",
            "get_positions", "print_account_information", "print_full_account_information", "print_positions",
-           "SecurityInformation",
            "positions_to_security_information"]
 
 
@@ -154,6 +153,8 @@ async def _fill_isin(
 ) -> SecurityInformation:
     if not ib.isConnected():
         raise ConnectionError("Connect to IBKR before requesting an ISIN.")
+    if security.provider is not Provider.IBKR:
+        raise ValueError()
 
     if security.contract_id is not None:
         if security.contract_id <= 0:
@@ -392,6 +393,7 @@ async def positions_to_security_information(
         await _fill_isin(
             ib,
             SecurityInformation(
+                provider=Provider.IBKR,
                 symbol=position_.symbol,
                 exchange=position_.exchange,
                 currency=position_.currency,

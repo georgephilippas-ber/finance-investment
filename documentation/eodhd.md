@@ -2,30 +2,11 @@
 
 `clients/eodhd/client.py` — wraps the EODHD REST API. Requires `EODHD_API_KEY` (env / `.env`). Cached responses live in `cache/eodhd/`.
 
-## `api_key`
-```python
-def api_key() -> str
-```
-Returns `EODHD_API_KEY`; raises `RuntimeError` when it is missing.
-
-## `get_exchanges`
-```python
-def get_exchanges(load_from_cache: bool = True) -> List[Dict]
-```
-Raw EODHD exchange list.
-- `load_from_cache` — read `cache/eodhd/exchanges.json` if present instead of calling the API (the API response is always written to the cache).
-
-## `create_exchanges_database`
-```python
-def create_exchanges_database(load_from_cache: bool = True) -> Path
-```
-Builds `domain/exchanges/exchanges.sqlite` (table `exchanges`: operating MIC, name, country, currency, EODHD code) from the exchange list plus `us_operating_mic_mapping.json`. Returns the database path.
-
 ## `read_exchanges_database`
 ```python
 def read_exchanges_database() -> DataFrame
 ```
-Reads the `exchanges` table (read-only).
+Reads the `exchanges` table of `domain/exchanges/exchanges.sqlite` (read-only): operating MIC, name, country, currency, EODHD code. The database is built by the private `_create_exchanges_database` from the EODHD exchange list and `us_operating_mic_mapping.json`.
 
 ## `get_symbols_by_ticker`
 ```python
@@ -49,9 +30,9 @@ Every symbol listed on an exchange.
 - `exchange` — operating MIC or EODHD code.
 - `load_from_cache` — use `cache/eodhd/symbols_<CODE>.json` when present.
 
-## `latest_candle`
+## `latest_price`
 ```python
-def latest_candle(security: SecurityInformation, *, lookback_days: int = 14) -> EODCandle
+def latest_price(security: SecurityInformation, *, lookback_days: int = 14) -> EndOfDayPrice
 ```
-Most recent daily candle for an EODHD `SecurityInformation` (`ticker.exchange`).
-- `lookback_days` — window searched for the latest candle; raises `LookupError` if empty.
+Most recent end-of-day price for a `Provider.EODHD` `SecurityInformation` (`symbol.exchange`); raises `ValueError` for another provider.
+- `lookback_days` — window searched for the latest price; raises `LookupError` if empty.
