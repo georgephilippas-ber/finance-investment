@@ -6,15 +6,14 @@ from sqlite3 import connect, Connection
 from typing import Optional, List, Dict
 
 import requests
-from dotenv import load_dotenv
 from pandas import DataFrame, read_sql_query
 
 if __package__:
     from .configuration import CACHE_DIRECTORY
-    from .domain import EODCandle, Symbol
+    from .domain import Symbol
 else:
     from configuration import CACHE_DIRECTORY
-    from clients.eodhd.domain import EODCandle, Symbol
+    from clients.eodhd.domain import Symbol
 
 
 def api_key() -> str:
