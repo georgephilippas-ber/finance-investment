@@ -35,6 +35,6 @@ if __name__ == "__main__":
     for s in enumerate(get_symbols_by_isin("DE000A0F5UJ7", currency="EUR")):
         print(s)
 
-    print(augmented_exchanges_database_ibkr(read_exchanges_database()).to_string(index=False))
+    # print(augmented_exchanges_database_ibkr(read_exchanges_database()).to_string(index=False))
 
     run(_ibkr_main())

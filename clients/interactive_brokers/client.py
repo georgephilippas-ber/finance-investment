@@ -238,7 +238,8 @@ async def fill_isin(
 
 
 def print_positions(positions: List[PortfolioPosition]) -> None:
-    headers_: List[str] = ["Symbol", "Exchange", "Currency", "Trading class", "Quantity", "Average cost", "Total cost"]
+    headers_: List[str] = ["Symbol", "Exchange", "Currency", "Trading class", "Quantity", "Average cost", "Total cost",
+                          "Contract ID"]
     rows_: List[List[str]] = [
         [
             position_.symbol,
@@ -248,6 +249,7 @@ def print_positions(positions: List[PortfolioPosition]) -> None:
             format(position_.quantity, ",f"),
             format(position_.average_cost, ",f"),
             format(position_.total_cost, ",f"),
+            str(position_.contract_id),
         ]
         for position_ in positions
     ]
