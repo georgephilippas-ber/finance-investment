@@ -1,6 +1,6 @@
 from asyncio import wait_for
 from decimal import Decimal
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 from ib_async import IB, AccountValue, Contract, PortfolioItem
 
@@ -12,7 +12,7 @@ else:
     from domain import AccountInfo, AccountInformation, PortfolioPosition, SecurityInformation
 
 __all__ = ["AccountInformation", "PortfolioPosition", "connect", "disconnect", "get_account_information",
-           "get_positions", "print_positions", "SecurityInformation", "fill_isin",
+           "get_positions", "print_account_information", "print_positions", "SecurityInformation", "fill_isin",
            "to_security_information"]
 
 
@@ -268,6 +268,32 @@ async def to_security_information(
     return await fill_isin(ib, security_, timeout=timeout)
 
 
+def _print_table(
+        headers: List[str],
+        rows: List[List[str]],
+        *,
+        first_right_aligned_column: int,
+        separators_after: Sequence[int] = (),
+) -> None:
+    widths_: List[int] = [
+        max(len(header_), *(len(row_[column_]) for row_ in rows))
+        for column_, header_ in enumerate(headers)
+    ] if rows else [len(header_) for header_ in headers]
+    border_ = "+" + "+".join("-" * (width_ + 2) for width_ in widths_) + "+"
+
+    print(border_)
+    print("| " + " | ".join(header_.ljust(width_) for header_, width_ in zip(headers, widths_)) + " |")
+    print(border_)
+    for index_, row_ in enumerate(rows):
+        print("| " + " | ".join(
+            value_.rjust(widths_[column_]) if column_ >= first_right_aligned_column else value_.ljust(widths_[column_])
+            for column_, value_ in enumerate(row_)
+        ) + " |")
+        if index_ in separators_after and index_ != len(rows) - 1:
+            print(border_)
+    print(border_)
+
+
 def print_positions(positions: List[PortfolioPosition]) -> None:
     headers_: List[str] = ["Symbol", "Exchange", "Currency", "Trading class", "Quantity", "Average cost", "Total cost",
                           "Market price", "Market value", "Unrealized PnL", "Realized PnL", "Return",
@@ -290,19 +316,21 @@ def print_positions(positions: List[PortfolioPosition]) -> None:
         ]
         for position_ in positions
     ]
-    widths_: List[int] = [
-        max(len(header_), *(len(row_[column_]) for row_ in rows_))
-        for column_, header_ in enumerate(headers_)
-    ] if rows_ else [len(header_) for header_ in headers_]
-    border_ = "+" + "+".join("-" * (width_ + 2) for width_ in widths_) + "+"
-
-    print(border_)
-    print("| " + " | ".join(header_.ljust(width_) for header_, width_ in zip(headers_, widths_)) + " |")
-    print(border_)
-    for row_ in rows_:
-        print("| " + " | ".join(
-            value_.rjust(widths_[column_]) if column_ >= 4 else value_.ljust(widths_[column_])
-            for column_, value_ in enumerate(row_)
-        ) + " |")
-    print(border_)
+    _print_table(headers_, rows_, first_right_aligned_column=4)
     print(f"({len(rows_)} {'row' if len(rows_) == 1 else 'rows'})")
+
+
+def print_account_information(information: AccountInformation) -> None:
+    rows_: List[List[str]] = [
+        ["Net liquidation", format(information.net_liquidation, ",f")],
+        ["Account", information.account],
+        ["Currency", information.currency],
+        ["Total cash", format(information.total_cash, ",f")],
+        ["Buying power", format(information.buying_power, ",f")],
+        ["Available funds", format(information.available_funds, ",f")],
+        ["Excess liquidity", format(information.excess_liquidity, ",f")],
+        ["Maintenance margin", format(information.maintenance_margin, ",f")],
+        ["Unrealized PnL", format(information.unrealized_pnl, ",f")],
+        ["Realized PnL", format(information.realized_pnl, ",f")],
+    ]
+    _print_table(["Field", "Value"], rows_, first_right_aligned_column=1, separators_after=(0,))
