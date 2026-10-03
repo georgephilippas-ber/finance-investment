@@ -4,19 +4,19 @@ from contextlib import closing
 from datetime import date, timedelta
 from pathlib import Path
 from sqlite3 import connect, Connection
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Set
 
 import requests
 from pandas import DataFrame, read_sql_query
 
-from clients.common.domain import Provider, SecurityInformation
+from clients.common.domain import EndOfDayPrice, Provider, SecurityInformation
 
 if __package__:
     from .configuration import CACHE_DIRECTORY
-    from .domain import EndOfDayPrice, Symbol
+    from .domain import _Symbol
 else:
     from configuration import CACHE_DIRECTORY
-    from clients.eodhd.domain import EndOfDayPrice, Symbol
+    from clients.eodhd.domain import _Symbol
 
 
 def _api_key() -> str:
@@ -154,12 +154,12 @@ def _resolve_symbol(
     return ticker if ticker.endswith(f".{eodhd_code}") else f"{ticker}.{eodhd_code}"
 
 
-def get_symbols_by_ticker(
+def _get_symbols_by_ticker(
         ticker: str,
         *,
         operating_mic: Optional[str] = None,
         eodhd_code: Optional[str] = None,
-) -> List[Symbol]:
+) -> List[_Symbol]:
     symbol_ = _resolve_symbol(ticker, operating_mic=operating_mic, eodhd_code=eodhd_code)
     ticker_, _, exchange_ = symbol_.rpartition(".")
 
@@ -173,7 +173,7 @@ def get_symbols_by_ticker(
     if not isinstance(records_, list) or not all(isinstance(record_, dict) for record_ in records_):
         raise ValueError()
     return [
-        Symbol(
+        _Symbol(
             code=record_["Code"],
             name=record_["Name"],
             country=record_["Country"],
@@ -186,7 +186,7 @@ def get_symbols_by_ticker(
     ]
 
 
-def get_symbols_by_isin(isin: str, *, currency: str) -> List[Symbol]:
+def _get_symbols_by_isin(isin: str, *, currency: str) -> List[_Symbol]:
     isin = isin.strip().upper()
     currency = currency.strip().upper()
     if not isin or not currency:
@@ -205,7 +205,7 @@ def get_symbols_by_isin(isin: str, *, currency: str) -> List[Symbol]:
         raise LookupError("> limit")
 
     return [
-        Symbol(
+        _Symbol(
             code=record_["Code"],
             name=record_["Name"],
             country=record_["Country"],
@@ -219,7 +219,7 @@ def get_symbols_by_isin(isin: str, *, currency: str) -> List[Symbol]:
     ]
 
 
-def get_symbols_in_exchange(exchange: str, load_from_cache: bool = True) -> List[Symbol]:
+def _get_symbols_in_exchange(exchange: str, load_from_cache: bool = True) -> List[_Symbol]:
     exchange = exchange.strip().upper()
 
     if not exchange:
@@ -254,7 +254,7 @@ def get_symbols_in_exchange(exchange: str, load_from_cache: bool = True) -> List
         raise ValueError()
 
     symbols_ = [
-        Symbol(
+        _Symbol(
             code=record_["Code"],
             name=record_["Name"],
             country=record_["Country"],
@@ -305,6 +305,50 @@ def latest_price(security: SecurityInformation, *, lookback_days: int = 14) -> E
         adjusted_close=record_["adjusted_close"],
         volume=record_["volume"],
     )
+
+
+def _symbol_to_security_information(symbol: _Symbol, eodhd_codes: Set[str]) -> Optional[SecurityInformation]:
+    if symbol.exchange in eodhd_codes:
+        exchange_ = symbol.exchange
+    elif symbol.country == "USA":
+        exchange_ = "US"
+    else:
+        return None
+
+    return SecurityInformation(
+        provider=Provider.EODHD,
+        symbol=symbol.code,
+        exchange=exchange_,
+        currency=symbol.currency,
+        isin=symbol.isin or None,
+    )
+
+
+def _symbols_to_security_information(symbols: List[_Symbol]) -> List[SecurityInformation]:
+    codes_ = set(read_exchanges_database()["eodhd_code"])
+    return [
+        security_ for security_ in (_symbol_to_security_information(symbol_, codes_) for symbol_ in symbols)
+        if security_ is not None
+    ]
+
+
+def get_security_information_by_ticker(
+        ticker: str,
+        *,
+        operating_mic: Optional[str] = None,
+        eodhd_code: Optional[str] = None,
+) -> List[SecurityInformation]:
+    return _symbols_to_security_information(
+        _get_symbols_by_ticker(ticker, operating_mic=operating_mic, eodhd_code=eodhd_code)
+    )
+
+
+def get_security_information_by_isin(isin: str, *, currency: str) -> List[SecurityInformation]:
+    return _symbols_to_security_information(_get_symbols_by_isin(isin, currency=currency))
+
+
+def get_security_information_in_exchange(exchange: str, load_from_cache: bool = True) -> List[SecurityInformation]:
+    return _symbols_to_security_information(_get_symbols_in_exchange(exchange, load_from_cache=load_from_cache))
 
 
 if __name__ == "__main__":

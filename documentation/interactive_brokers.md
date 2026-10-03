@@ -1,62 +1,76 @@
 # Interactive Brokers client
 
-`clients/interactive_brokers/client.py` — talks to IB Gateway / TWS through `ib_async`. Connections are read-only by default; nothing here places orders.
+`clients/interactive_brokers/client.py` — reads an account through IB Gateway / TWS using `ib_async`.
 
-Connection settings come from `IBKR_HOST`, `IBKR_PORT`, `IBKR_CLIENT_ID` (env / `.env`), defaulting to `127.0.0.1`, `4001`, `1`.
+- Connections are read-only by default. Nothing here places orders; commissions come from what-if previews.
+- Connection settings: `IBKR_HOST`, `IBKR_PORT`, `IBKR_CLIENT_ID` (environment or `.env`), defaulting to `127.0.0.1`, `4001`, `1`. Use port `4002` for a paper account.
+- `account` parameters may be omitted when the session manages exactly one account; otherwise pass the account ID (`ValueError` if missing or unknown).
+- `timeout` parameters are seconds per IBKR request.
 
-## `connect`
+## Connection
+
+### `connect`
 ```python
 async def connect(*, host: Optional[str] = None, port: Optional[int] = None, client_id: Optional[int] = None, readonly: bool = True, timeout: float = 10) -> IB
 ```
-Opens a connection to the gateway and returns the `IB` session.
-- `host`, `port`, `client_id` — override the env/default settings.
+Opens a session and returns the `IB` object every other function takes.
+- `host`, `port`, `client_id` — override the environment / defaults.
 - `readonly` — keep `True` unless orders must be placed.
 - `timeout` — seconds to wait for the connection.
 
-## `disconnect`
+### `disconnect`
 ```python
 def disconnect(ib: IB) -> None
 ```
-Closes the session.
+Closes the session. Call it in a `finally` block.
 
-## `get_account_information`
+## Account
+
+### `get_account_information`
 ```python
 async def get_account_information(ib: IB, account: Optional[str] = None, *, limit_discount: Decimal = Decimal(0), timeout: float = 50) -> AccountInformation
 ```
-Account summary in the base currency: net liquidation, cash, buying power, margin, realized/unrealized PnL, cost of positions, gross and net return, and the cash left after liquidating everything (`liquidation_value`).
-- `account` — account ID; may be omitted when only one account is managed.
-- `limit_discount` — limit price below market used for the liquidation estimate (`0` = at market).
-- `timeout` — seconds per IBKR request.
+Returns an [`AccountInformation`](domain.md#accountinformation) in the account's base currency: IBKR's summary values plus cost of positions, gross and net return, and the liquidation value.
+- `limit_discount` — how far below market (above for shorts) the simulated closing orders are priced; `0` = at market, `Decimal("0.05")` = 5 % worse.
 
-Runs a what-if order per position (no order placed) to get IBKR's commission for closing it at the limit price, rounded to the venue's tick size. Raises if a position has no market price, IBKR returns no commission, or a position is not in the base currency.
+**Liquidation simulation.** For each position it runs a what-if limit order to close it — no order is placed. The limit is rounded to the venue's tick size, and IBKR's own commission for that order is used. Net proceeds feed `liquidation_value` and `net_return`.
 
-## `get_positions`
+**Errors.** Raises if a position has no market price, IBKR returns no commission, a position is not in the base currency (no FX conversion), or an account value is missing or ambiguous.
+
+## Positions
+
+### `get_positions`
 ```python
 def get_positions(ib: IB, account: Optional[str] = None) -> List[PortfolioPosition]
 ```
-Open positions with quantity, average cost, total cost, market price/value, realized/unrealized PnL and return.
-- `account` — as above.
+Open positions as [`PortfolioPosition`](domain.md#portfolioposition)s: quantity, cost, IBKR market price and value, PnL and return. Reads the portfolio already streamed to the session; no extra request.
 
-## `positions_to_security_information`
+### `get_positions_as_security_information`
 ```python
-async def positions_to_security_information(ib: IB, positions: List[PortfolioPosition], *, timeout: float = 50) -> List[SecurityInformation]
+async def get_positions_as_security_information(ib: IB, account: Optional[str] = None, *, timeout: float = 50) -> List[SecurityInformation]
 ```
-Converts each `PortfolioPosition` into a `Provider.IBKR` `SecurityInformation` (same order) and fills its ISIN (and contract ID) from IBKR's contract details. Raises `LookupError` when there is no or more than one matching contract, or not exactly one ISIN.
+The open positions (as `get_positions`, same order) as `Provider.IBKR` [`SecurityInformation`](domain.md#securityinformation)s, with `isin` and `contract_id` filled from IBKR's contract details (one request per position). This is the starting point for [mapping to EODHD](mappings.md).
 
-## `print_account_information`
+Raises `LookupError` if a position has no or several matching contracts, or not exactly one ISIN; the whole call fails rather than returning a partial list.
+
+## Printing
+
+### `print_account_information`
 ```python
 def print_account_information(information: AccountInformation) -> None
 ```
-Prints an `AccountInformation` as a grouped two-column table. Shows `liquidation_value` as "Net liquidation" and IBKR's net liquidation as "Portfolio market value".
+Prints a two-column table in groups: account and currency; portfolio market value and net liquidation; gross return, net return and unrealized PnL; cash and margin figures; realized PnL.
 
-## `print_positions`
+Labels differ from field names: `net_liquidation` is printed as **Portfolio market value** and `liquidation_value` as **Net liquidation**.
+
+### `print_positions`
 ```python
 def print_positions(positions: List[PortfolioPosition]) -> None
 ```
-Prints a list of `PortfolioPosition` as a table with a row count.
+Prints one row per position (symbol, exchange, currency, trading class, quantity, costs, market price and value, PnL, return, contract ID) and a row count.
 
-## `print_full_account_information`
+### `print_full_account_information`
 ```python
 async def print_full_account_information(ib: IB, account: Optional[str] = None, *, limit_discount: Decimal = Decimal(0), timeout: float = 50) -> None
 ```
-Fetches and prints the account summary (`get_account_information` → `print_account_information`) followed by the positions table (`get_positions` → `print_positions`). Parameters are passed through to `get_account_information`; `account` also to `get_positions`.
+Fetches and prints both tables: `get_account_information` → `print_account_information`, then `get_positions` → `print_positions`. Parameters are passed through.

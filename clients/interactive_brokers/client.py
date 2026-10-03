@@ -1,11 +1,12 @@
 from asyncio import wait_for
 from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
-from typing import List, Optional, Sequence
+from typing import List, Optional
 
 from ib_async import IB, AccountValue, Contract, ContractDetails, LimitOrder, OrderState, PortfolioItem
 from ib_async.util import UNSET_DOUBLE
 
 from clients.common.domain import Provider, SecurityInformation
+from clients.common.printing import print_table
 
 if __package__:
     from . import configuration
@@ -16,7 +17,7 @@ else:
 
 __all__ = ["AccountInformation", "PortfolioPosition", "connect", "disconnect", "get_account_information",
            "get_positions", "print_account_information", "print_full_account_information", "print_positions",
-           "positions_to_security_information"]
+           "get_positions_as_security_information"]
 
 
 def _get_account_pnl(info: AccountInfo, tag: str, currency: str) -> Decimal:
@@ -194,6 +195,28 @@ async def _fill_isin(
     security.contract_id = matches_[0].contract.conId
     security.isin = next(iter(isins_))
     return security
+
+
+async def _positions_to_security_information(
+        ib: IB,
+        positions: List[PortfolioPosition],
+        *,
+        timeout: float = 50,
+) -> List[SecurityInformation]:
+    return [
+        await _fill_isin(
+            ib,
+            SecurityInformation(
+                provider=Provider.IBKR,
+                symbol=position_.symbol,
+                exchange=position_.exchange,
+                currency=position_.currency,
+                contract_id=position_.contract_id,
+            ),
+            timeout=timeout,
+        )
+        for position_ in positions
+    ]
 
 
 # PUBLIC
@@ -383,52 +406,13 @@ def get_positions(
     ]
 
 
-async def positions_to_security_information(
+async def get_positions_as_security_information(
         ib: IB,
-        positions: List[PortfolioPosition],
+        account: Optional[str] = None,
         *,
         timeout: float = 50,
 ) -> List[SecurityInformation]:
-    return [
-        await _fill_isin(
-            ib,
-            SecurityInformation(
-                provider=Provider.IBKR,
-                symbol=position_.symbol,
-                exchange=position_.exchange,
-                currency=position_.currency,
-                contract_id=position_.contract_id,
-            ),
-            timeout=timeout,
-        )
-        for position_ in positions
-    ]
-
-
-def _print_table(
-        headers: List[str],
-        rows: List[List[str]],
-        *,
-        first_right_aligned_column: int,
-        separators_after: Sequence[int] = (),
-) -> None:
-    widths_: List[int] = [
-        max(len(header_), *(len(row_[column_]) for row_ in rows))
-        for column_, header_ in enumerate(headers)
-    ] if rows else [len(header_) for header_ in headers]
-    border_ = "+" + "+".join("-" * (width_ + 2) for width_ in widths_) + "+"
-
-    print(border_)
-    print("| " + " | ".join(header_.ljust(width_) for header_, width_ in zip(headers, widths_)) + " |")
-    print(border_)
-    for index_, row_ in enumerate(rows):
-        print("| " + " | ".join(
-            value_.rjust(widths_[column_]) if column_ >= first_right_aligned_column else value_.ljust(widths_[column_])
-            for column_, value_ in enumerate(row_)
-        ) + " |")
-        if index_ in separators_after and index_ != len(rows) - 1:
-            print(border_)
-    print(border_)
+    return await _positions_to_security_information(ib, get_positions(ib, account), timeout=timeout)
 
 
 def print_positions(positions: List[PortfolioPosition]) -> None:
@@ -453,7 +437,7 @@ def print_positions(positions: List[PortfolioPosition]) -> None:
         ]
         for position_ in positions
     ]
-    _print_table(headers_, rows_, first_right_aligned_column=4)
+    print_table(headers_, rows_, first_right_aligned_column=4)
     print(f"({len(rows_)} {'row' if len(rows_) == 1 else 'rows'})")
 
 
@@ -474,7 +458,7 @@ def print_account_information(information: AccountInformation) -> None:
         ["Maintenance margin", format(information.maintenance_margin, ",f")],
         ["Realized PnL", format(information.realized_pnl, ",f")],
     ]
-    _print_table(["Field", "Value"], rows_, first_right_aligned_column=1, separators_after=(1, 3, 6, 11))
+    print_table(["Field", "Value"], rows_, first_right_aligned_column=1, separators_after=(1, 3, 6, 11))
 
 
 async def print_full_account_information(
