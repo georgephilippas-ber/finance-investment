@@ -1,7 +1,8 @@
 # finance-investment
 
 A personal investment toolkit that reads an Interactive Brokers account (read-only by default), links its securities to EODHD
-market data, and records position opening dates to estimate annualized unrealized returns.
+market data, records position opening dates to estimate annualized unrealized returns, and scans IBKR for bonds with
+their yields.
 
 ## Documentation
 
@@ -12,8 +13,11 @@ market data, and records position opening dates to estimate annualized unrealize
 | [EODHD client](documentation/eodhd.md)                             | Exchanges database, security lookup by ticker / ISIN / exchange, latest end-of-day price.                                 |
 | [Exchanges](documentation/exchanges.md)                            | Exchanges database with IBKR codes: get and print.                                                                        |
 | [Mappings](documentation/mappings.md)                              | `SecurityInformationMapping`: converting between IBKR and EODHD, and what it relies on (ISIN, exchange mapping, currency). |
-| [Domain](documentation/domain.md)                                  | Public data structures: `Provider`, `SecurityInformation`, `EndOfDayPrice`, `AccountInformation`, `PortfolioPosition`, `Lot`. |
+| [Domain](documentation/domain.md)                                  | Public data structures: `Provider`, `SecurityInformation`, `EndOfDayPrice`, `AccountInformation`, `PortfolioPosition`, `Lot`, and an index of the bond types. |
 | [Printing](documentation/printing.md)                              | `print_table`, `print_section`, `print_subsection`.                                                                       |
+| [Bond scanner](documentation/scanner.md)                           | `scan_bonds`, `quote_bonds`, `Bond` (dirty price, yield to maturity, yield without reinvestment), `print_bond(s)`.        |
+| [Helpers](documentation/helpers.md)                                | `latest_weekday`.                                                                                                         |
+| [Bond scanning tutorial](research/bond-scanning-europe.md)         | IBKR scanner codes, filter tags and ready-made queries for European government and corporate bonds.                      |
 
 ## Layout
 
@@ -28,21 +32,30 @@ clients/
     configuration.py      connection settings and tracker key (from the environment)
     domain.py             account and position types
     position_tracker.py   PositionTracker, Lot
+    scanner/              bond scanning
+      __init__.py         hides IBKR's harmless scanner-cancelled message
+      fixed_income.py     scan_bonds, quote_bonds
+      domain.py           Bond, BondQuote, BondFilters
+      printing.py         print_bond, print_bonds
   eodhd/                  EODHD client, configuration, internal symbol type
 printing/                 print_table, print_section, print_subsection
+helpers/                  latest_weekday
 domain/
   exchanges/              exchanges.sqlite and the MIC mapping JSON files
   positions/              positions.sqlite (position tracker)
 cache/eodhd/              cached EODHD responses
 documentation/            these pages and examples/main_features.py
 main.py                   prints the IBKR account summary and positions
-research/main.py          prints the account object and positions
+research/
+  main.py                 prints the account summary and positions, then scans and prints EUR corporate bonds
+  configuration.py        file name for a dump of IBKR's scanner parameters
+  bond-scanning-europe.md bond scanning tutorial
 ```
 
 ## Setup
 
 1. **Python packages:** `pip install -r requirements.txt` (includes `ib_async`, `pandas`, `python-dotenv`,
-   `cryptography`, `babel`).
+   `cryptography`, `babel`, and `numpy` and `scipy` for bond yields).
 2. **IB Gateway or TWS** running with the API enabled. Defaults `127.0.0.1:4001`, client ID `1`; override with
    `IBKR_HOST`, `IBKR_PORT`, `IBKR_CLIENT_ID`. Match the API socket port configured in Gateway or TWS
    (`4002` is the paper Gateway convention).
@@ -96,7 +109,9 @@ python3 main.py
 It does not call EODHD or run `features()`. The entry point currently has no `finally` block for disconnection on errors.
 
 Scripts under `research/` run as modules from the project root, e.g. `python3 -m research.main`. That script
-loads `.env`, prints the account data object and positions table, and disconnects in a `finally` block.
+loads `.env`, prints the account summary and positions, scans IBKR for EUR investment-grade corporate bonds, prints
+them with their yields, and disconnects in a `finally` block. Live bond prices need a European bond market-data
+subscription; otherwise previous closes are used.
 
 ## Typical flow
 

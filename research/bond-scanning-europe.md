@@ -1,8 +1,12 @@
 # Scanning for European Bonds with the IBKR API
 
-A practical guide to finding European government and corporate bonds through the IBKR market scanner, using `ib_async`.
-Every code below was taken from `scanner.xml`, which `main.py` generates with `ib.reqScannerParametersAsync()`. If IBKR
-changes its scanner, re-run that call and check the codes against the new file.
+A practical guide to finding European government and corporate bonds through the IBKR market scanner. Every code
+below comes from IBKR's scanner parameters XML, returned by `ib.reqScannerParametersAsync()`. A commented-out block in
+`research/main.py` saves it as `interactive_brokers_scanner_reference.xml`; if IBKR changes its scanner, save a fresh
+copy and check the codes against it.
+
+The functions used here (`scan_bonds`, `quote_bonds`, `print_bonds`, …) are documented in
+[Bond scanner](../documentation/scanner.md).
 
 ---
 
@@ -176,7 +180,7 @@ The `issuerCountryIs` values for Europe, taken from the XML:
 
 ---
 
-## 6. The helper
+## 6. Running a scan
 
 `scan_bonds` lives in `clients/interactive_brokers/scanner/fixed_income.py`:
 
@@ -192,10 +196,11 @@ finally:
     disconnect(ib)
 ```
 
-Pass any filter from section 4 as a keyword argument. Values are converted to strings for you.
+Pass any filter from section 4 as a keyword argument; values are converted to strings for you. Tags that are not in
+`BondFilters` still work but are flagged by type checkers.
 
-`scan_bonds` returns a list of `Bond` objects (defined in `scanner/domain.py`), already filled with ISIN, coupon,
-maturity and the other details. Section 8 shows how to add prices and yields.
+`scan_bonds` returns a list of `Bond` objects with ISIN, coupon, maturity and the other details. Section 8 shows how to
+add prices and yields; [Bond scanner](../documentation/scanner.md#scan_bonds) explains where each field comes from.
 
 ---
 
@@ -292,19 +297,20 @@ await scan_bonds(
 
 ### 7.7 Bonds you can buy in small amounts
 
-Many European bonds have a EUR 100,000 minimum denomination. To find bonds with smaller minimums:
+Many European corporate bonds have a EUR 100,000 minimum denomination. To leave those out:
 
 ```python
 await scan_bonds(
     ib, instrument="BOND", location="BOND.WW", scan_code="HIGH_BOND_ASK_YIELD_ALL",
     currencyLike="EUR",
     bondCreditRating="highGrade",
-    bondInitialSizeBelow=10_000,     # minimum order <= 10k face value
+    bondInitialSizeBelow=100,        # minimum order below 100 units
 )
 ```
 
-The XML does not state the unit for `bondInitialSize`. Check one result's minimum size in TWS to confirm it is face
-value and not thousands.
+The XML does not state the unit of `bondInitialSize`. It appears to match IBKR's order quantity, the same unit as
+`Bond.minimum_size`, and that unit is not currency: a what-if order on a Bund showed one unit = €1,000 of face value.
+So `minimum_size = 1` means about €1,000 and `100` about €100,000. Check a bond's unit in TWS before trading.
 
 ### 7.8 One issuer's whole curve
 
@@ -346,30 +352,29 @@ await scan_bonds(
 
 ## 8. Prices and yields
 
-`quote_bonds` returns the same bonds with their `quote` (price, time, live flag) filled in:
+`quote_bonds` returns the same bonds with a `quote` (clean price, time, live flag); `print_bonds` and `print_bond`
+show them with their yields:
 
 ```python
 from clients.interactive_brokers.scanner.fixed_income import quote_bonds
+from clients.interactive_brokers.scanner.printing import print_bond, print_bonds
 
-for bond in await quote_bonds(ib, bonds):
-    print(bond.description, bond.isin, bond.quote and bond.quote.price, bond.yield_to_maturity())
-# OBL 2 1/2 04/16/31 DE000BU25067 97.035 3.2111
+quoted = await quote_bonds(ib, bonds)
+print_bonds(quoted, title="GERMAN GOVERNMENT BONDS")
+print_bond(quoted[0])
+
+bond = quoted[0]
+bond.dirty_price()                 # 98.193 for OBL 2 1/2 04/16/31 at 97.035 clean
+bond.yield_to_maturity()           # 3.21 (%)
+bond.yield_without_reinvestment()  # 3.04 (%), coupons kept as cash
 ```
 
-The price is live when the market is open and the previous close otherwise (`quote.live` is `False`). When IBKR has
-no price, `quote` is `None`, and so is `yield_to_maturity()`. Euro bond quotes need a European bond market-data
-subscription.
+The price is live when the market is open and the previous close otherwise (`quote.live` is `False`). Without any
+price, `quote` and every yield are `None`. Live euro bond prices need a European bond market-data subscription.
 
-What IBKR fills in for these bonds, and where the rest comes from:
-
-- **From IBKR:** conId, ISIN, `descAppend`, trading class, callable flag, minimum and increment size.
-- **Read from `descAppend`:** coupon and maturity, because IBKR leaves those fields empty.
-- **From your filters:** currency, taken from `currencyLike`, because IBKR leaves it empty too.
-- **Inferred:** inflation linkage, from IBKR's index-factor flag.
-
-IBKR does not report how often a bond pays its coupon, so every bond is treated as paying once a year. That is right for
-German and most other euro government bonds. For bonds that pay twice a year (Italian BTPs, UK gilts, most USD bonds)
-the computed yield is slightly off.
+Coupons are treated as annual, because IBKR does not report the payment frequency. That is right for German and most
+other euro government bonds; for semi-annual payers (Italian BTPs, UK gilts, most USD bonds) the computed yield is
+slightly off. The full calculation rules are in [Bond scanner](../documentation/scanner.md#methods).
 
 ---
 
@@ -379,12 +384,16 @@ the computed yield is slightly off.
   location, a yield filter on a price-only location, or filters that don't match each other.
 - **Unsupported filters are dropped without warning.** A filter that doesn't apply to the instrument, such as a rating
   filter on sovereigns, is usually ignored rather than rejected, so the results can look filtered when they aren't. Each
-  instrument's supported filters are in its `<filters>` list in `scanner.xml`.
+  instrument's supported filters are in its `<filters>` list in the scanner parameters XML.
 - **50-row cap.** If a scan returns exactly 50 rows, you are probably missing bonds. Tighten the filters or split the
   scan by country or maturity range.
 - **Scanner yields are snapshots.** For the bonds you shortlist, check yields against live market data.
 - **Units differ by filter.** Issue size is in millions and quoted size is in thousands. Yields and coupons are in
   percent.
+- **Order quantities are not currency.** IBKR's quantity unit for bonds can be €1,000 of face value per unit (Bunds),
+  so minimum sizes and order quantities must be converted before reading them as money.
+- **IBKR returns few bond details.** Ratings, issuer names, payment frequency and often currency, coupon and maturity
+  come back empty. The scanner can filter on ratings but does not return them.
 - **Refinitiv data covers issuers, not bonds.** The balance-sheet ratio and ESG filters describe the issuing company,
   so every bond from the same issuer gets the same value.
 
@@ -395,7 +404,7 @@ the computed yield is slightly off.
 ```python
 import xml.etree.ElementTree as ET
 
-root = ET.parse("scanner.xml").getroot()
+root = ET.parse("interactive_brokers_scanner_reference.xml").getroot()
 
 # Filters available for an instrument
 for instrument in root.iter("Instrument"):
