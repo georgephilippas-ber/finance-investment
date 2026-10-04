@@ -37,7 +37,7 @@ clients/
       __init__.py         hides IBKR's harmless scanner-cancelled message
       fixed_income.py     interactive_brokers_scan_bonds, quote_bonds
       domain.py           Bond, BondQuote, BondFilters
-      printing.py         print_bond, print_bonds
+      printing.py         print_bond, print_bonds, print_bonds_table
   eodhd/                  EODHD client, configuration, internal symbol type
   gleif/                  GLEIF client: issuer LEI by ISIN
 printing/                 print_table, print_section, print_subsection

@@ -12,7 +12,7 @@ if __package__:
 else:
     from domain import SCANNER_ROW_LIMIT, Bond
 
-__all__ = ["print_bond", "print_bonds_table"]
+__all__ = ["print_bond", "print_bonds", "print_bonds_table"]
 
 
 def _coupon(bond: Bond) -> str:
@@ -70,6 +70,14 @@ def print_bond(bond: Bond, valuation_date: Optional[date] = None) -> None:
     ]
     print_table(["Field", "Value"], rows_, first_right_aligned_column=1, separators_after=(4, 8, 13, 16, 18, 21),
                 title=bond.description)
+
+
+def print_bonds(bonds: List[Bond], valuation_date: Optional[date] = None) -> None:
+    valuation_date_ = valuation_date or latest_weekday()
+    for index_, bond_ in enumerate(bonds):
+        if index_:
+            print()
+        print_bond(bond_, valuation_date_)
 
 
 def print_bonds_table(bonds: List[Bond], valuation_date: Optional[date] = None, *, title: str = "BONDS") -> None:

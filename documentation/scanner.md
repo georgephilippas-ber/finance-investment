@@ -9,7 +9,7 @@ prints them. For scan codes, filter tags and ready-made European queries see the
 | `__init__.py` | Hides IBKR's harmless "API scanner subscription cancelled" message (error 162), which ib_async logs as an error after every one-shot scan. Other 162 errors still show. Applied on import of any scanner module. |
 | `fixed_income.py` | [`interactive_brokers_scan_bonds`](#interactive_brokers_scan_bonds), [`quote_bonds`](#quote_bonds) |
 | `domain.py` | [`BondFilters`](#bondfilters), [`BondQuote`](#bondquote), [`Bond`](#bond) |
-| `printing.py` | [`print_bond`](#print_bond), [`print_bonds_table`](#print_bonds) |
+| `printing.py` | [`print_bond`](#print_bond), [`print_bonds`](#print_bonds), [`print_bonds_table`](#print_bonds_table) |
 
 - Nothing here places orders. Requests are IBKR scanner, contract-details and market-data requests, plus one
   [GLEIF](gleif.md) lookup per scanned bond.
@@ -166,9 +166,16 @@ Titled with the bond's description. A two-column sheet in groups:
 Every calculation uses the one `valuation_date` (default `latest_weekday()`), which the sheet shows. Yield labels end
 in "(real)" for inflation-linked bonds.
 
+### `print_bonds`
+```python
+def print_bonds(bonds: List[Bond], valuation_date: Optional[date] = None) -> None
+```
+A [`print_bond`](#print_bond) sheet for each bond, separated by a blank line. All sheets use the same valuation date
+(default `latest_weekday()`).
+
 ### `print_bonds_table`
 ```python
-def print_bonds(bonds: List[Bond], valuation_date: Optional[date] = None, *, title: str = "BONDS") -> None
+def print_bonds_table(bonds: List[Bond], valuation_date: Optional[date] = None, *, title: str = "BONDS") -> None
 ```
 Titled `title` followed by the number of bonds, e.g. **BONDS (21 instruments)**. At exactly 50, IBKR's scanner cap, it
 reads **(> 50 instruments)**, since more bonds probably matched. One row per bond and a row count. Columns: Contract ID, Name (`description`), Issuer (the legal name from `legal_entity`), ISIN, Clean price, Coupon, Years to
