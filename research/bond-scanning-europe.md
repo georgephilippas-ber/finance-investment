@@ -178,24 +178,24 @@ The `issuerCountryIs` values for Europe, taken from the XML:
 
 ## 6. The helper
 
-`scan_bonds` lives in `clients/interactive_brokers/scanner.py`:
+`scan_bonds` lives in `clients/interactive_brokers/scanner/fixed_income.py`:
 
 ```python
 from clients.interactive_brokers.client import connect, disconnect
-from clients.interactive_brokers.scanner import scan_bonds
+from clients.interactive_brokers.scanner.fixed_income import scan_bonds
 
 ib = await connect()
 try:
-    results = await scan_bonds(ib, "BOND.GOVT.NON-US", "BOND.GOVT.NON-US", "HIGH_BOND_ASK_YIELD_ALL",
-                               issuerCountryIs="DE", currencyLike="EUR")
+    bonds = await scan_bonds(ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.NON-US",
+                             scan_code="HIGH_BOND_ASK_YIELD_ALL", issuerCountryIs="DE", currencyLike="EUR")
 finally:
     disconnect(ib)
 ```
 
 Pass any filter from section 4 as a keyword argument. Values are converted to strings for you.
 
-Each result is a `ScanData` with `.rank` and `.contractDetails.contract`. The contract usually has only basic fields
-filled in. Section 8 shows how to get the full bond details.
+`scan_bonds` returns a list of `Bond` objects (defined in `scanner/domain.py`), already filled with ISIN, coupon,
+maturity and the other details. Section 8 shows how to add prices and yields.
 
 ---
 
@@ -205,7 +205,7 @@ filled in. Section 8 shows how to get the full bond details.
 
 ```python
 await scan_bonds(
-    ib, "BOND.GOVT.NON-US", "BOND.GOVT.NON-US", "HIGH_BOND_ASK_YIELD_ALL",
+    ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.NON-US", scan_code="HIGH_BOND_ASK_YIELD_ALL",
     issuerCountryIs="DE",
     currencyLike="EUR",
     maturityDateAbove=2,
@@ -220,7 +220,7 @@ await scan_bonds(
 results = {}
 for country in ["IT", "ES", "PT", "GR"]:
     results[country] = await scan_bonds(
-        ib, "BOND.GOVT.NON-US", "BOND.GOVT.NON-US", "HIGH_BOND_ASK_YIELD_ALL",
+        ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.NON-US", scan_code="HIGH_BOND_ASK_YIELD_ALL",
         issuerCountryIs=country,
         currencyLike="EUR",
         bondAskYieldAbove=3,
@@ -232,7 +232,7 @@ for country in ["IT", "ES", "PT", "GR"]:
 
 ```python
 await scan_bonds(
-    ib, "BOND.GOVT.NON-US", "BOND.GOVT.NON-US", "NEAR_MATURITY_DATE",
+    ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.NON-US", scan_code="NEAR_MATURITY_DATE",
     issuerCountryIs="NL",
     currencyLike="EUR",
     maturityDateBelow="12/2027",
@@ -244,7 +244,7 @@ await scan_bonds(
 
 ```python
 await scan_bonds(
-    ib, "BOND", "BOND.WW", "HIGH_BOND_ASK_YIELD_ALL",
+    ib, instrument="BOND", location="BOND.WW", scan_code="HIGH_BOND_ASK_YIELD_ALL",
     currencyLike="EUR",
     bondCreditRating="highGrade",
     maturityDateAbove=3,
@@ -261,7 +261,7 @@ await scan_bonds(
 
 ```python
 await scan_bonds(
-    ib, "BOND", "BOND.WW", "HIGH_SP_RATING_ALL",
+    ib, instrument="BOND", location="BOND.WW", scan_code="HIGH_SP_RATING_ALL",
     issuerCountryIs="FR",
     currencyLike="EUR",
     spRatingAbove="A-",
@@ -277,7 +277,7 @@ does not say.
 
 ```python
 await scan_bonds(
-    ib, "BOND", "BOND.WW", "HIGH_BOND_ASK_YIELD_ALL",
+    ib, instrument="BOND", location="BOND.WW", scan_code="HIGH_BOND_ASK_YIELD_ALL",
     currencyLike="EUR",
     bondCreditRating="highYield",
     spRatingAbove="BB-",             # stay in the upper part of high yield
@@ -296,7 +296,7 @@ Many European bonds have a EUR 100,000 minimum denomination. To find bonds with 
 
 ```python
 await scan_bonds(
-    ib, "BOND", "BOND.WW", "HIGH_BOND_ASK_YIELD_ALL",
+    ib, instrument="BOND", location="BOND.WW", scan_code="HIGH_BOND_ASK_YIELD_ALL",
     currencyLike="EUR",
     bondCreditRating="highGrade",
     bondInitialSizeBelow=10_000,     # minimum order <= 10k face value
@@ -310,7 +310,7 @@ value and not thousands.
 
 ```python
 await scan_bonds(
-    ib, "BOND", "BOND.WW", "FAR_MATURITY_DATE",
+    ib, instrument="BOND", location="BOND.WW", scan_code="FAR_MATURITY_DATE",
     bondIssuerLike="Volkswagen",
     currencyLike="EUR",
 )
@@ -320,11 +320,11 @@ await scan_bonds(
 
 ```python
 # Sovereigns: yield filters are available here
-await scan_bonds(ib, "BOND.GOVT.NON-US", "BOND.GOVT.EU.EBS", "HIGH_BOND_ASK_YIELD_ALL", currencyLike="CHF")
+await scan_bonds(ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.EU.EBS", scan_code="HIGH_BOND_ASK_YIELD_ALL", currencyLike="CHF")
 
 # Corporates: SIX corporate data is price-only, so filter and sort on price
 await scan_bonds(
-    ib, "BOND", "BOND.EU.EBS", "HIGH_COUPON_RATE",
+    ib, instrument="BOND", location="BOND.EU.EBS", scan_code="HIGH_COUPON_RATE",
     currencyLike="CHF",
     bondAskBelow=100,                # trading below par
     maturityDateBelow=5,
@@ -335,7 +335,7 @@ await scan_bonds(
 
 ```python
 await scan_bonds(
-    ib, "BOND", "BOND.WW", "SCAN_esgEmissionsScore_DESC",
+    ib, instrument="BOND", location="BOND.WW", scan_code="SCAN_esgEmissionsScore_DESC",
     currencyLike="EUR",
     bondCreditRating="highGrade",
     esgEmissionsScoreAbove=70,
@@ -344,35 +344,32 @@ await scan_bonds(
 
 ---
 
-## 8. Getting the full bond details
+## 8. Prices and yields
 
-Scanner results carry only a lightweight contract. To see the coupon, maturity, ratings and ISIN, request contract
-details by `conId`:
+`quote_bonds` returns the same bonds with their `quote` (price, time, live flag) filled in:
 
 ```python
-from ib_async import Contract
+from clients.interactive_brokers.scanner.fixed_income import quote_bonds
 
-async def describe(ib: IB, scan_results: list) -> list[dict]:
-    rows = []
-    for result in scan_results:
-        contract = Contract(conId=result.contractDetails.contract.conId)
-        [details] = await ib.reqContractDetailsAsync(contract)
-        rows.append({
-            "conId": contract.conId,
-            "description": details.descAppend,
-            "issuer": details.longName,
-            "coupon": details.coupon,
-            "maturity": details.maturity,
-            "ratings": details.ratings,
-            "callable": details.callable,
-            "currency": details.contract.currency,
-            "identifiers": {tag.tag: tag.value for tag in (details.secIdList or [])},  # ISIN / CUSIP
-        })
-    return rows
+for bond in await quote_bonds(ib, bonds):
+    print(bond.description, bond.isin, bond.quote and bond.quote.price, bond.yield_to_maturity())
+# OBL 2 1/2 04/16/31 DE000BU25067 97.035 3.2111
 ```
 
-For live prices and yields, call `ib.reqMktData(contract)`. Bond ticks include bid and ask yields when IBKR calculates
-them. Euro bond quotes need a European bond market-data subscription.
+The price is live when the market is open and the previous close otherwise (`quote.live` is `False`). When IBKR has
+no price, `quote` is `None`, and so is `yield_to_maturity()`. Euro bond quotes need a European bond market-data
+subscription.
+
+What IBKR fills in for these bonds, and where the rest comes from:
+
+- **From IBKR:** conId, ISIN, `descAppend`, trading class, callable flag, minimum and increment size.
+- **Read from `descAppend`:** coupon and maturity, because IBKR leaves those fields empty.
+- **From your filters:** currency, taken from `currencyLike`, because IBKR leaves it empty too.
+- **Inferred:** inflation linkage, from IBKR's index-factor flag.
+
+IBKR does not report how often a bond pays its coupon, so every bond is treated as paying once a year. That is right for
+German and most other euro government bonds. For bonds that pay twice a year (Italian BTPs, UK gilts, most USD bonds)
+the computed yield is slightly off.
 
 ---
 

@@ -5,3 +5,5 @@ bt
 python-dotenv
 cryptography
 babel
+numpy
+scipy
