@@ -15,7 +15,7 @@ their yields.
 | [Mappings](documentation/mappings.md)                              | `SecurityInformationMapping`: converting between IBKR and EODHD, and what it relies on (ISIN, exchange mapping, currency). |
 | [Domain](documentation/domain.md)                                  | Public data structures: `Provider`, `SecurityInformation`, `EndOfDayPrice`, `AccountInformation`, `PortfolioPosition`, `Lot`, and an index of the bond types. |
 | [Printing](documentation/printing.md)                              | `print_table`, `print_section`, `print_subsection`.                                                                       |
-| [Bond scanner](documentation/scanner.md)                           | `scan_bonds`, `quote_bonds`, `Bond` (dirty price, yield to maturity, yield without reinvestment), `print_bond(s)`.        |
+| [Bond scanner](documentation/scanner.md)                           | `interactive_brokers_scan_bonds`, `quote_bonds`, `Bond` (dirty price, yield to maturity, yield without reinvestment), `print_bond(s)`.        |
 | [Helpers](documentation/helpers.md)                                | `latest_weekday`.                                                                                                         |
 | [Bond scanning tutorial](research/bond-scanning-europe.md)         | IBKR scanner codes, filter tags and ready-made queries for European government and corporate bonds.                      |
 

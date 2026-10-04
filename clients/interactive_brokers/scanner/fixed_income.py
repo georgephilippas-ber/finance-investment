@@ -14,7 +14,7 @@ if __package__:
 else:
     from domain import Bond, BondFilters, BondQuote
 
-__all__ = ["scan_bonds", "quote_bonds"]
+__all__ = ["interactive_brokers_scan_bonds", "quote_bonds"]
 
 _logger = getLogger(__name__)
 
@@ -60,8 +60,8 @@ async def _get_details(ib: IB, contract_id: int) -> ContractDetails:
     return details_[0]
 
 
-async def scan_bonds(
-        ib: IB, *,
+async def interactive_brokers_scan_bonds(
+        client_: IB, *,
         instrument: str,
         location: str,
         scan_code: str,
@@ -75,8 +75,8 @@ async def scan_bonds(
         numberOfRows=rows,
     )
     tags_ = [TagValue(name_, str(value_)) for name_, value_ in filters.items()]
-    results_ = await ib.reqScannerDataAsync(subscription_, scannerSubscriptionFilterOptions=tags_)
-    details_ = await gather(*(_get_details(ib, result_.contractDetails.contract.conId) for result_ in results_))
+    results_ = await client_.reqScannerDataAsync(subscription_, scannerSubscriptionFilterOptions=tags_)
+    details_ = await gather(*(_get_details(client_, result_.contractDetails.contract.conId) for result_ in results_))
 
     bonds_: List[Bond] = []
     for item_ in details_:

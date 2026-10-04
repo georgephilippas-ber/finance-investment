@@ -5,7 +5,7 @@ below comes from IBKR's scanner parameters XML, returned by `ib.reqScannerParame
 `research/main.py` saves it as `interactive_brokers_scanner_reference.xml`; if IBKR changes its scanner, save a fresh
 copy and check the codes against it.
 
-The functions used here (`scan_bonds`, `quote_bonds`, `print_bonds`, …) are documented in
+The functions used here (`interactive_brokers_scan_bonds`, `quote_bonds`, `print_bonds`, …) are documented in
 [Bond scanner](../documentation/scanner.md).
 
 ---
@@ -182,24 +182,25 @@ The `issuerCountryIs` values for Europe, taken from the XML:
 
 ## 6. Running a scan
 
-`scan_bonds` lives in `clients/interactive_brokers/scanner/fixed_income.py`:
+`interactive_brokers_scan_bonds` lives in `clients/interactive_brokers/scanner/fixed_income.py`:
 
 ```python
 from clients.interactive_brokers.client import connect, disconnect
-from clients.interactive_brokers.scanner.fixed_income import scan_bonds
+from clients.interactive_brokers.scanner.fixed_income import interactive_brokers_scan_bonds
 
 ib = await connect()
 try:
-    bonds = await scan_bonds(ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.NON-US",
-                             scan_code="HIGH_BOND_ASK_YIELD_ALL", issuerCountryIs="DE", currencyLike="EUR")
+  bonds = await interactive_brokers_scan_bonds(ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.NON-US",
+                                               scan_code="HIGH_BOND_ASK_YIELD_ALL", issuerCountryIs="DE",
+                                               currencyLike="EUR")
 finally:
-    disconnect(ib)
+  disconnect(ib)
 ```
 
 Pass any filter from section 4 as a keyword argument; values are converted to strings for you. Tags that are not in
 `BondFilters` still work but are flagged by type checkers.
 
-`scan_bonds` returns a list of `Bond` objects with ISIN, coupon, maturity and the other details. Section 8 shows how to
+`interactive_brokers_scan_bonds` returns a list of `Bond` objects with ISIN, coupon, maturity and the other details. Section 8 shows how to
 add prices and yields; [Bond scanner](../documentation/scanner.md#scan_bonds) explains where each field comes from.
 
 ---

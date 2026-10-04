@@ -10,9 +10,9 @@ Data structures that public functions take or return. All are dataclasses except
 | `AccountInformation` | `clients/interactive_brokers/domain.py` | `get_account_information` | `print_account_information` |
 | `PortfolioPosition` | `clients/interactive_brokers/domain.py` | `get_positions` | `print_positions` |
 | `Lot` | `clients/interactive_brokers/position_tracker.py` | `PositionTracker.by_contract_id` | — |
-| `Bond` | `clients/interactive_brokers/scanner/domain.py` | `scan_bonds`, `quote_bonds` | `quote_bonds`, `print_bond`, `print_bonds` |
+| `Bond` | `clients/interactive_brokers/scanner/domain.py` | `interactive_brokers_scan_bonds`, `quote_bonds` | `quote_bonds`, `print_bond`, `print_bonds` |
 | `BondQuote` | `clients/interactive_brokers/scanner/domain.py` | inside `Bond.quote` | — |
-| `BondFilters` | `clients/interactive_brokers/scanner/domain.py` | — | `scan_bonds` |
+| `BondFilters` | `clients/interactive_brokers/scanner/domain.py` | — | `interactive_brokers_scan_bonds` |
 
 ## Common
 
