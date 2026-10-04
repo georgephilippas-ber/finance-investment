@@ -74,7 +74,6 @@ class Bond:
         return dates_[::-1]
 
     def dirty_price(self, settlement: Optional[date] = None) -> Optional[Decimal]:
-        # Quoted (clean) price plus the coupon accrued since the last coupon date, per 100 face.
         if self.quote is None:
             return None
         settlement_ = settlement or latest_weekday()
@@ -86,8 +85,6 @@ class Bond:
         return self.quote.price + self.annual_coupon * 100 * elapsed_
 
     def yield_without_reinvestment(self, settlement: Optional[date] = None) -> Optional[Decimal]:
-        # Annual return in % if coupons are kept as cash: face value plus all remaining coupons at maturity, against the
-        # dirty price paid at settlement. A conservative floor under yield_to_maturity, which assumes reinvestment.
         settlement_ = settlement or latest_weekday()
         dirty_price_ = self.dirty_price(settlement_)
         if dirty_price_ is None:
@@ -97,8 +94,6 @@ class Bond:
         return Decimal(str(round(growth_ * 100, 4)))
 
     def yield_to_maturity(self, settlement: Optional[date] = None) -> Optional[Decimal]:
-        # Annual yield in %: the IRR of paying the dirty price at settlement for the remaining cash flows, timed in
-        # actual/365.25 years. Real (not nominal) yield for inflation-linked bonds.
         settlement_ = settlement or latest_weekday()
         dirty_price_ = self.dirty_price(settlement_)
         if dirty_price_ is None:

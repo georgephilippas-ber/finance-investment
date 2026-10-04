@@ -20,7 +20,6 @@ _logger = getLogger(__name__)
 
 
 def _parse_description(description: str) -> Tuple[Decimal, date]:
-    # IBKR leaves coupon/maturity empty for these bonds; descAppend carries them, e.g. "OBL 2 1/2 04/16/31".
     _, *coupon_parts_, maturity_ = description.split()
     coupon_ = Decimal(0)
     for part_ in coupon_parts_:

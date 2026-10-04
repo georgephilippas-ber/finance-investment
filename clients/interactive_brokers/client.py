@@ -224,7 +224,6 @@ async def _positions_to_security_information(
     ]
 
 
-# PUBLIC
 
 async def connect(
         *,

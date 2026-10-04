@@ -20,7 +20,6 @@ def _coupon(bond: Bond) -> str:
 
 
 def _price(value: Optional[Decimal]) -> str:
-    # Bond prices are per 100 face, not money, so no currency symbol.
     return format_decimal(value, format="#,##0.000", locale="en_US") if value is not None else "-"
 
 
