@@ -23,6 +23,8 @@ class BondFilters(TypedDict, total=False):
     bondDefaultedIs: Any
     excludeConvertible: Any
     bondAmtOutstandingAbove: Any  # millions of face value
+    bondInitialSizeAbove: Any
+    bondInitialSizeBelow: Any
 
 
 def _add_months(day: date, months: int) -> date:

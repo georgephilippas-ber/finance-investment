@@ -42,12 +42,15 @@ async def _main() -> None:
                                             currencyLike='EUR',
                                             bondCreditRating='highGrade',
                                             maturityDateAbove=_maturity_date_in_years(2),
-                                            maturityDateBelow=_maturity_date_in_years(5),
+                                            maturityDateBelow=_maturity_date_in_years(3),
                                             bondCallableIs='false',
                                             excludeConvertible='true',
                                             bondVarCouponRateIs='false',
                                             bondDefaultedIs='false',
-                                            bondAmtOutstandingAbove=500)
+                                            bondAmtOutstandingAbove=100,
+                                            bondInitialSizeAbove=1,
+                                            bondInitialSizeBelow=100,
+                                            )
 
         quoted_corporate_ = await quote_bonds(ib, bonds_corporate_)
         print()

@@ -18,6 +18,7 @@ __all__ = ["get_face_value_per_unit", "quote_bonds", "scan_bonds"]
 
 _logger = getLogger(__name__)
 
+
 def _parse_description(description: str) -> Tuple[Decimal, date]:
     # IBKR leaves coupon/maturity empty for these bonds; descAppend carries them, e.g. "OBL 2 1/2 04/16/31".
     _, *coupon_parts_, maturity_ = description.split()
@@ -83,14 +84,15 @@ async def scan_bonds(
         try:
             bonds_.append(_to_bond(item_, filters.get("currencyLike")))
         except ValueError:
-            _logger.warning(f"Skipping conId {item_.contract.conId}: cannot read coupon/maturity from {item_.descAppend!r}.")
+            _logger.warning(
+                f"Skipping conId {item_.contract.conId}: cannot read coupon/maturity from {item_.descAppend!r}.")
     return bonds_
 
 
 def _to_quote(ticker: Optional[Ticker]) -> Optional[BondQuote]:
-    # Live price (last trade inside the spread, else the midpoint), falling back to the previous close.
     if ticker is None:
         return None
+
     price_, live_ = ticker.marketPrice(), ticker.marketDataType == 1
     if isnan(price_) or price_ <= 0:
         price_, live_ = ticker.close, False
@@ -100,32 +102,10 @@ def _to_quote(ticker: Optional[Ticker]) -> Optional[BondQuote]:
 
 
 async def quote_bonds(ib: IB, bonds: List[Bond]) -> List[Bond]:
-    # Returns the same bonds with their quote filled in, or left as None when IBKR has no price.
     contracts_ = [Contract(conId=bond_.contract_id) for bond_ in bonds]
+
     await ib.qualifyContractsAsync(*contracts_)
+
     tickers_ = {ticker_.contract.conId: ticker_ for ticker_ in await ib.reqTickersAsync(*contracts_)}
+
     return [replace(bond_, quote=_to_quote(tickers_.get(bond_.contract_id))) for bond_ in bonds]
-
-
-async def get_face_value_per_unit(ib: IB, bond: Bond) -> Optional[Decimal]:
-    # IBKR does not say whether a bond's order quantity counts currency of face value (Bunds) or whole bonds (e.g.
-    # $1,000 US bonds). A what-if order is priced by IBKR but never transmitted; comparing the equity it would use
-    # with quantity x price / 100 reveals the unit. Accrued interest and commission are absorbed by rounding to a power
-    # of ten. In a cash account the cost shows up in the equity change, not the margin change (which stays 0).
-    if bond.quote is None:
-        return None
-    contract_ = Contract(conId=bond.contract_id)
-    await ib.qualifyContractsAsync(contract_)
-    quantity_ = bond.minimum_size
-    # An explicit DAY time-in-force stops IBKR's preset notice (10349), which would otherwise end the request early.
-    order_ = LimitOrder("BUY", float(quantity_), float(bond.quote.price), tif="DAY")
-    state_ = await ib.whatIfOrderAsync(contract_, order_)
-    if not isinstance(state_, OrderState):
-        return None
-    try:
-        cost_ = -Decimal(state_.equityWithLoanChange)
-    except (InvalidOperation, TypeError):
-        return None
-    if not cost_.is_finite() or cost_ <= 0 or cost_ >= Decimal("1e300"):
-        return None
-    return Decimal(10) ** round(log10(cost_ / (quantity_ * bond.quote.price / 100)))
