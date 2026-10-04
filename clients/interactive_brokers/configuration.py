@@ -4,6 +4,9 @@ from base64 import urlsafe_b64decode
 DEFAULT_HOST: str = "127.0.0.1"
 DEFAULT_PORT: int = 4001
 DEFAULT_CLIENT_ID: int = 1
+DEFAULT_CONNECT_TIMEOUT: float = 10
+DEFAULT_REQUEST_TIMEOUT: float = 50
+YIELD_DECIMALS: int = 2
 
 
 def host() -> str:

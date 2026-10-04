@@ -1,6 +1,6 @@
 from typing import List, Optional, Sequence
 
-__all__ = ["print_section", "print_subsection", "print_table"]
+__all__ = ["print_grouped_table", "print_row_count", "print_section", "print_subsection", "print_table"]
 
 
 def print_table(
@@ -35,6 +35,19 @@ def print_table(
         if index_ in separators_after and index_ != len(rows) - 1:
             print(border_)
     print(border_)
+
+
+def print_grouped_table(headers: List[str], groups: List[List[List[str]]], *, title: Optional[str] = None) -> None:
+    rows_ = [row_ for group_ in groups for row_ in group_]
+    ends_, end_ = [], -1
+    for group_ in groups:
+        end_ += len(group_)
+        ends_.append(end_)
+    print_table(headers, rows_, first_right_aligned_column=1, separators_after=ends_, title=title)
+
+
+def print_row_count(count: int, detail: Optional[str] = None) -> None:
+    print(f"({count} {'row' if count == 1 else 'rows'}{f', {detail}' if detail else ''})")
 
 
 def print_section(title: str) -> None:

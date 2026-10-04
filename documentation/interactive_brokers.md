@@ -8,7 +8,8 @@
   `4001`, `1`. The entry-point scripts load `.env`; library callers must load it themselves if needed. Set the
   port to the API socket port configured in your Gateway or TWS; `4002` is the paper Gateway convention.
 - `account` parameters may be omitted when the session manages exactly one account; otherwise pass the account ID (`ValueError` if missing or unknown).
-- `timeout` parameters are seconds per IBKR request.
+- `timeout` parameters are seconds per IBKR request; they default to `DEFAULT_REQUEST_TIMEOUT` (50) and, for `connect`,
+  `DEFAULT_CONNECT_TIMEOUT` (10), both in `configuration.py`.
 - Open dates come from the [position tracker](position_tracker.md) (`IBKR_POSITION_TRACKER_KEY`), not from IBKR.
 
 ## Connection

@@ -30,7 +30,7 @@ async def scan_details(client: IB, instrument: str, location: str, scan_code: st
 async def _get_details(client: IB, contract_id: int) -> ContractDetails:
     details_ = await client.reqContractDetailsAsync(Contract(conId=contract_id))
     if len(details_) != 1:
-        raise LookupError(f"Expected one contract for conId {contract_id}, got {len(details_)}.")
+        raise LookupError()
     return details_[0]
 
 

@@ -11,6 +11,8 @@ from cryptography.hazmat.primitives.ciphers.aead import AESSIV
 from dotenv import load_dotenv
 from pandas import DataFrame
 
+from settings import PROJECT_ROOT
+
 if __package__:
     from . import configuration
 else:
@@ -18,7 +20,7 @@ else:
 
 __all__ = ["Lot", "PositionTracker"]
 
-DEFAULT_PATH: Path = Path(__file__).resolve().parents[2] / "domain" / "positions" / "positions.sqlite"
+DEFAULT_PATH: Path = PROJECT_ROOT / "domain" / "positions" / "positions.sqlite"
 
 
 @dataclass(frozen=True)
@@ -114,7 +116,6 @@ class PositionTracker:
 def _main() -> None:
     load_dotenv()
     print(PositionTracker.all())
-    print(PositionTracker.by_contract_id(42443509))
 
 
 if __name__ == "__main__":

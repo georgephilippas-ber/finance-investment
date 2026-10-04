@@ -9,7 +9,7 @@ from ib_async import IB, AccountValue, Contract, PortfolioItem
 from ib_async.util import UNSET_DOUBLE
 
 from clients.common.domain import Provider, SecurityInformation
-from printing import print_table
+from printing import print_grouped_table, print_row_count, print_table
 
 if __package__:
     from . import configuration, position_tracker
@@ -22,6 +22,17 @@ else:
 __all__ = ["AccountInformation", "PortfolioPosition", "connect", "disconnect", "get_account_information",
            "get_commission", "get_positions", "print_account_information", "print_full_account_information",
            "print_positions", "get_positions_as_security_information"]
+
+CENT = Decimal("0.01")
+DAYS_PER_YEAR = 365
+_MINIMUM_ANNUALIZATION_DAYS = DAYS_PER_YEAR
+_EUR_COMMISSION_MINIMUM = Decimal(3)
+_EUR_COMMISSION_RATE = Decimal("0.0005")
+_USD_COMMISSION_MINIMUM = Decimal(1)
+_USD_COMMISSION_PER_SHARE = Decimal("0.005")
+_USD_COMMISSION_MAXIMUM_RATE = Decimal("0.01")
+_COMPACT_MONEY_THRESHOLD = Decimal(1_000_000)
+_COMPACT_MONEY_FRACTION_DIGITS = 2
 
 
 def _get_account_pnl(info: AccountInfo, tag: str, currency: str) -> Decimal:
@@ -124,7 +135,7 @@ async def _get_account_info(
         ib: IB,
         account: Optional[str] = None,
         *,
-        timeout: float = 50,
+        timeout: float = configuration.DEFAULT_REQUEST_TIMEOUT,
 ) -> AccountInfo:
     if not ib.isConnected():
         raise ConnectionError("Connect to IBKR before requesting account information.")
@@ -155,7 +166,7 @@ async def _fill_isin(
         ib: IB,
         security: SecurityInformation,
         *,
-        timeout: float = 50,
+        timeout: float = configuration.DEFAULT_REQUEST_TIMEOUT,
 ) -> SecurityInformation:
     if not ib.isConnected():
         raise ConnectionError("Connect to IBKR before requesting an ISIN.")
@@ -206,7 +217,7 @@ async def _positions_to_security_information(
         ib: IB,
         positions: List[PortfolioPosition],
         *,
-        timeout: float = 50,
+        timeout: float = configuration.DEFAULT_REQUEST_TIMEOUT,
 ) -> List[SecurityInformation]:
     return [
         await _fill_isin(
@@ -231,7 +242,7 @@ async def connect(
         port: Optional[int] = None,
         client_id: Optional[int] = None,
         readonly: bool = True,
-        timeout: float = 10,
+        timeout: float = configuration.DEFAULT_CONNECT_TIMEOUT,
 ) -> IB:
     ib = IB()
     try:
@@ -259,12 +270,13 @@ def get_commission(quantity: Decimal, price: Decimal, currency: str) -> Decimal:
     value_ = shares_ * price
     match currency:
         case "EUR":
-            commission_ = max(Decimal(3), value_ * Decimal("0.0005"))
+            commission_ = max(_EUR_COMMISSION_MINIMUM, value_ * _EUR_COMMISSION_RATE)
         case "USD":
-            commission_ = min(max(Decimal(1), shares_ * Decimal("0.005")), value_ * Decimal("0.01"))
+            commission_ = min(max(_USD_COMMISSION_MINIMUM, shares_ * _USD_COMMISSION_PER_SHARE),
+                              value_ * _USD_COMMISSION_MAXIMUM_RATE)
         case _:
             raise LookupError()
-    return commission_.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return commission_.quantize(CENT, rounding=ROUND_HALF_UP)
 
 
 def _get_liquidation_proceeds(items: List[PortfolioItem], currency: str) -> Optional[Decimal]:
@@ -288,7 +300,7 @@ async def get_account_information(
         ib: IB,
         account: Optional[str] = None,
         *,
-        timeout: float = 50,
+        timeout: float = configuration.DEFAULT_REQUEST_TIMEOUT,
 ) -> AccountInformation:
     information_ = _to_account_information(await _get_account_info(ib, account, timeout=timeout))
     proceeds_ = _get_liquidation_proceeds(_get_positions(ib, information_.account), information_.currency)
@@ -320,9 +332,9 @@ def _get_holding(contract_id: int) -> Tuple[Optional[date], Optional[Decimal]]:
 
 
 def _get_annualized_return(hpr: Optional[Decimal], days: Optional[Decimal]) -> Optional[Decimal]:
-    if hpr is None or days is None or days < 365 or hpr <= -1:
+    if hpr is None or days is None or days < _MINIMUM_ANNUALIZATION_DAYS or hpr <= -1:
         return None
-    return (1 + hpr) ** (Decimal(365) / days) - 1
+    return (1 + hpr) ** (Decimal(DAYS_PER_YEAR) / days) - 1
 
 
 def get_positions(
@@ -358,7 +370,7 @@ async def get_positions_as_security_information(
         ib: IB,
         account: Optional[str] = None,
         *,
-        timeout: float = 50,
+        timeout: float = configuration.DEFAULT_REQUEST_TIMEOUT,
 ) -> List[SecurityInformation]:
     return await _positions_to_security_information(ib, get_positions(ib, account), timeout=timeout)
 
@@ -383,44 +395,53 @@ def print_positions(positions: List[PortfolioPosition]) -> None:
         ]
         for position_ in positions
     ]
-    print_table(headers_, rows_, first_right_aligned_column=4, title="OPEN POSITIONS")
-    print(f"({len(rows_)} {'row' if len(rows_) == 1 else 'rows'})")
+    print_table(headers_, rows_, first_right_aligned_column=headers_.index("Quantity"), title="OPEN POSITIONS")
+    print_row_count(len(rows_))
 
 
 def _format_money(amount: Optional[Decimal], currency: str) -> str:
     if amount is None:
         return "-"
-    if abs(amount) >= 1_000_000:
-        return format_compact_currency(amount, currency, locale="en_US", fraction_digits=2)
-    return format_currency(amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP), currency, locale="en_US")
+    if abs(amount) >= _COMPACT_MONEY_THRESHOLD:
+        return format_compact_currency(amount, currency, locale="en_US", fraction_digits=_COMPACT_MONEY_FRACTION_DIGITS)
+    return format_currency(amount.quantize(CENT, rounding=ROUND_HALF_UP), currency, locale="en_US")
 
 
 def print_account_information(information: AccountInformation) -> None:
     currency_ = information.currency
-    rows_: List[List[str]] = [
-        ["Account", information.account],
-        ["Currency", currency_],
-        ["Portfolio market value", _format_money(information.net_liquidation, currency_)],
-        ["Net liquidation", _format_money(information.liquidation_value, currency_)],
-        ["Gross return", format(information.gross_return, ".2%") if information.gross_return is not None else "-"],
-        ["Net return", format(information.net_return, ".2%") if information.net_return is not None else "-"],
-        ["Unrealized PnL", _format_money(information.unrealized_pnl, currency_)],
-        ["Total cash", _format_money(information.total_cash, currency_)],
-        ["Buying power", _format_money(information.buying_power, currency_)],
-        ["Available funds", _format_money(information.available_funds, currency_)],
-        ["Excess liquidity", _format_money(information.excess_liquidity, currency_)],
-        ["Maintenance margin", _format_money(information.maintenance_margin, currency_)],
-        ["Realized PnL", _format_money(information.realized_pnl, currency_)],
+    groups_: List[List[List[str]]] = [
+        [
+            ["Account", information.account],
+            ["Currency", currency_],
+        ],
+        [
+            ["Portfolio market value", _format_money(information.net_liquidation, currency_)],
+            ["Net liquidation", _format_money(information.liquidation_value, currency_)],
+        ],
+        [
+            ["Gross return", format(information.gross_return, ".2%") if information.gross_return is not None else "-"],
+            ["Net return", format(information.net_return, ".2%") if information.net_return is not None else "-"],
+            ["Unrealized PnL", _format_money(information.unrealized_pnl, currency_)],
+        ],
+        [
+            ["Total cash", _format_money(information.total_cash, currency_)],
+            ["Buying power", _format_money(information.buying_power, currency_)],
+            ["Available funds", _format_money(information.available_funds, currency_)],
+            ["Excess liquidity", _format_money(information.excess_liquidity, currency_)],
+            ["Maintenance margin", _format_money(information.maintenance_margin, currency_)],
+        ],
+        [
+            ["Realized PnL", _format_money(information.realized_pnl, currency_)],
+        ],
     ]
-    print_table(["Field", "Value"], rows_, first_right_aligned_column=1, separators_after=(1, 3, 6, 11),
-                title="ACCOUNT SUMMARY")
+    print_grouped_table(["Field", "Value"], groups_, title="ACCOUNT SUMMARY")
 
 
 async def print_full_account_information(
         ib: IB,
         account: Optional[str] = None,
         *,
-        timeout: float = 50,
+        timeout: float = configuration.DEFAULT_REQUEST_TIMEOUT,
 ) -> None:
     print_account_information(await get_account_information(ib, account, timeout=timeout))
     print()

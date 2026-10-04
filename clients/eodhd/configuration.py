@@ -1,3 +1,3 @@
-from pathlib import Path
+from settings import PROJECT_ROOT
 
-CACHE_DIRECTORY = Path(__file__).resolve().parents[2] / "cache" / "eodhd"
+CACHE_DIRECTORY = PROJECT_ROOT / "cache" / "eodhd"

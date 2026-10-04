@@ -25,7 +25,7 @@ prints them. Scan codes, filter tags and ready-made European queries are in the
 
 ### `interactive_brokers_scan_bonds`
 ```python
-async def interactive_brokers_scan_bonds(ib: IB, *, instrument: str, location: str, scan_code: str, rows: int = SCANNER_ROW_LIMIT, **filters: Unpack[BondFilters]) -> List[Bond]
+async def interactive_brokers_scan_bonds(client_: IB, *, instrument: str, location: str, scan_code: str, rows: int = SCANNER_ROW_LIMIT, **filters: Unpack[BondFilters]) -> List[Bond]
 ```
 Runs one IBKR scan and returns the matching bonds as [`Bond`](#bond)s, without quotes.
 - `instrument`, `location`, `scan_code` — IBKR scanner codes, e.g. `"BOND.GOVT.NON-US"`, `"BOND.GOVT.NON-US"`,
@@ -151,7 +151,8 @@ actual/actual, which suits Bunds but not 30/360 markets. Duration and convexity 
 ## Printing
 
 Prices are formatted with Babel (`97.035`, `1,109.462`) without a currency symbol, since they are per 100 face.
-Coupons and yields are percentages to three decimals. Missing values are shown as `-`.
+Coupons are percentages to three decimals; yields are rounded and shown to `YIELD_DECIMALS` decimals (2), set in
+`clients/interactive_brokers/configuration.py`. Missing values are shown as `-`.
 
 ### `print_bond`
 ```python
@@ -180,11 +181,12 @@ A [`print_bond`](#print_bond) sheet for each bond, separated by a blank line. Al
 ```python
 def print_bonds_table(bonds: List[Bond], valuation_date: Optional[date] = None, *, title: str = "BONDS", has_lei: bool = False) -> None
 ```
-With `has_lei=True`, only bonds with a `legal_entity` are printed and the title shows how many were kept, e.g.
-**BONDS (16 of > 50 instruments)**.
-Titled `title` followed by the number of bonds, e.g. **BONDS (21 instruments)**. At exactly 50, IBKR's scanner cap, it
-reads **(> 50 instruments)**, since more bonds probably matched. One row per bond and a row count. Columns: Contract ID, Name (`description`), Issuer (the legal name from `legal_entity`), ISIN, Clean price, Coupon, Years to
-maturity, Yield to maturity, Yield, no reinvestment.
+One row per bond, followed by a row count. Columns: Contract ID, Name (`description`), Issuer (the legal name from
+`legal_entity`), ISIN, Clean price, Coupon, Years to maturity, Yield to maturity, Yield, no reinvestment.
+
+The title is `title` followed by the number of bonds, e.g. **BONDS (21 instruments)**. At exactly 50, IBKR's scanner
+cap, it reads **(> 50 instruments)**, since more bonds probably matched. With `has_lei=True`, only bonds with a
+`legal_entity` are printed and the title shows how many were kept, e.g. **BONDS (16 of > 50 instruments)**.
 
 ## Example
 

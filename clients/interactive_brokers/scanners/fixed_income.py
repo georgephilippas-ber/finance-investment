@@ -9,14 +9,17 @@ from ib_async import IB, ContractDetails
 
 if __package__:
     from ._shared import get_isin, get_market_prices, resolve_legal_entities, scan_details
-    from .domain import SCANNER_ROW_LIMIT, Bond, BondFilters, BondQuote
+    from .domain import PERCENT, SCANNER_ROW_LIMIT, Bond, BondFilters, BondQuote
 else:
     from _shared import get_isin, get_market_prices, resolve_legal_entities, scan_details
-    from domain import SCANNER_ROW_LIMIT, Bond, BondFilters, BondQuote
+    from domain import PERCENT, SCANNER_ROW_LIMIT, Bond, BondFilters, BondQuote
 
 __all__ = ["interactive_brokers_scan_bonds", "quote_bonds"]
 
 _logger = getLogger(__name__)
+
+_IBKR_DATE_FORMAT = "%Y%m%d"
+_IBKR_DATE_LENGTH = len("YYYYMMDD")
 
 
 def _parse_description(description: str) -> Tuple[Decimal, date]:
@@ -33,7 +36,7 @@ def _to_bond(details: ContractDetails, currency: Optional[str]) -> Bond:
     currency_ = contract_.currency or currency
     if details.maturity:
         coupon_ = Decimal(str(details.coupon))
-        maturity_ = datetime.strptime(details.maturity[:8], "%Y%m%d").date()
+        maturity_ = datetime.strptime(details.maturity[:_IBKR_DATE_LENGTH], _IBKR_DATE_FORMAT).date()
     else:
         coupon_, maturity_ = _parse_description(details.descAppend)
     return Bond(
@@ -42,7 +45,7 @@ def _to_bond(details: ContractDetails, currency: Optional[str]) -> Bond:
         description=details.descAppend,
         bond_type=contract_.tradingClass,
         currency=currency_,
-        annual_coupon=coupon_ / 100,  # IBKR and descAppend quote coupons in percent
+        annual_coupon=coupon_ / PERCENT,  # IBKR and descAppend quote coupons in percent
         maturity=maturity_,
         inflation_linked=details.evRule.startswith("factor"),  # index-ratio factor, e.g. DBRI
         callable=details.callable,

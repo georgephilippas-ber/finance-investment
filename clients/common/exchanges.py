@@ -5,12 +5,12 @@ from typing import Dict, List
 from pandas import DataFrame
 
 from clients.eodhd.client import read_exchanges_database
-from printing import print_table
+from settings import PROJECT_ROOT
+from printing import print_row_count, print_table
 
 __all__ = ["get_augmented_exchanges_database", "print_augmented_exchanges_database"]
 
-IBKR_MAPPING_FILE: Path = Path(__file__).resolve().parents[
-                              2] / "domain" / "exchanges" / "ibkr_operating_mic_mapping.json"
+IBKR_MAPPING_FILE: Path = PROJECT_ROOT / "domain" / "exchanges" / "ibkr_operating_mic_mapping.json"
 
 
 def _augmented_exchanges_database_ibkr(exchanges: DataFrame) -> DataFrame:
@@ -48,5 +48,5 @@ def print_augmented_exchanges_database(exchanges: DataFrame) -> None:
         for row_ in exchanges.sort_values(["country", "operating_mic"]).itertuples(index=False)
     ]
     print_table(headers_, rows_, first_right_aligned_column=len(headers_), title="EXCHANGES")
-    covered_ = sum(1 for row_ in rows_ if row_[2])
-    print(f"({len(rows_)} {'row' if len(rows_) == 1 else 'rows'}, {covered_} with IBKR)")
+    covered_ = sum(1 for row_ in rows_ if row_[headers_.index("IBKR exchange")])
+    print_row_count(len(rows_), f"{covered_} with IBKR")

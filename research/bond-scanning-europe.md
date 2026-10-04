@@ -1,9 +1,8 @@
 # Scanning for European Bonds with the IBKR API
 
 A practical guide to finding European government and corporate bonds through the IBKR market scanner. Every code
-below comes from IBKR's scanner parameters XML, returned by `ib.reqScannerParametersAsync()`. A commented-out block in
-`research/main.py` saves it as `interactive_brokers_scanner_reference.xml`; if IBKR changes its scanner, save a fresh
-copy and check the codes against it.
+below comes from IBKR's scanner parameters XML, returned by `ib.reqScannerParametersAsync()`. If IBKR changes its
+scanner, fetch a fresh copy and check the codes against it.
 
 The functions used here (`interactive_brokers_scan_bonds`, `quote_bonds`, `print_bonds_table`, …) are documented in
 [Scanners](../documentation/scanners.md).

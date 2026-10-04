@@ -4,8 +4,9 @@ from typing import List, Optional
 
 from babel.numbers import format_decimal
 
+from clients.interactive_brokers.configuration import YIELD_DECIMALS
 from helpers import latest_weekday
-from printing import print_table
+from printing import print_grouped_table, print_row_count, print_table
 
 if __package__:
     from .domain import SCANNER_ROW_LIMIT, Bond
@@ -24,7 +25,7 @@ def _price(value: Optional[Decimal]) -> str:
 
 
 def _yield(value: Optional[Decimal]) -> str:
-    return f"{value:.3f}%" if value is not None else "-"
+    return f"{value:.{YIELD_DECIMALS}f}%" if value is not None else "-"
 
 
 def _source(bond: Bond) -> str:
@@ -39,37 +40,50 @@ def print_bond(bond: Bond, valuation_date: Optional[date] = None) -> None:
     clean_price_ = quote_.price if quote_ is not None else None
     dirty_price_ = bond.dirty_price(valuation_date_)
     entity_ = bond.legal_entity
-    rows_: List[List[str]] = [
-        ["Description", bond.description],
-        ["ISIN", bond.isin or "-"],
-        ["IBKR contract ID", str(bond.contract_id)],
-        ["Bond type", bond.bond_type],
-        ["Currency", bond.currency or "-"],
-        ["Issuer", entity_.legal_name if entity_ is not None else "-"],
-        ["LEI", entity_.lei if entity_ is not None else "-"],
-        ["Issuer country", entity_.country if entity_ is not None else "-"],
-        ["LEI status", entity_.status if entity_ is not None else "-"],
-        ["Coupon", _coupon(bond)],
-        ["Years to maturity", format(bond.years_to_maturity(valuation_date_), ".2f")],
-        ["Yield to maturity (real)" if bond.inflation_linked else "Yield to maturity",
-         _yield(bond.yield_to_maturity(valuation_date_))],
-        ["Yield, no reinvestment (real)" if bond.inflation_linked else "Yield, no reinvestment",
-         _yield(bond.yield_without_reinvestment(valuation_date_))],
-        ["Maturity", bond.maturity.isoformat()],
-        ["Payment frequency", "Annual (assumed)"],
-        ["Inflation-linked", "Yes" if bond.inflation_linked else "No"],
-        ["Callable", "Yes" if bond.callable else "No"],
-        ["Minimum size", format(bond.minimum_size, ",f")],
-        ["Size increment", format(bond.size_increment, ",f")],
-        ["Price source", _source(bond)],
-        ["Quote received", quote_.as_of.strftime("%Y-%m-%d %H:%M %Z") if quote_ is not None else "-"],
-        ["Valuation date", valuation_date_.isoformat()],
-        ["Clean price", _price(clean_price_)],
-        ["Accrued interest", _price(dirty_price_ - clean_price_ if dirty_price_ is not None else None)],
-        ["Dirty price", _price(dirty_price_)],
+    groups_: List[List[List[str]]] = [
+        [
+            ["Description", bond.description],
+            ["ISIN", bond.isin or "-"],
+            ["IBKR contract ID", str(bond.contract_id)],
+            ["Bond type", bond.bond_type],
+            ["Currency", bond.currency or "-"],
+        ],
+        [
+            ["Issuer", entity_.legal_name if entity_ is not None else "-"],
+            ["LEI", entity_.lei if entity_ is not None else "-"],
+            ["Issuer country", entity_.country if entity_ is not None else "-"],
+            ["LEI status", entity_.status if entity_ is not None else "-"],
+        ],
+        [
+            ["Coupon", _coupon(bond)],
+            ["Years to maturity", format(bond.years_to_maturity(valuation_date_), ".2f")],
+            ["Yield to maturity (real)" if bond.inflation_linked else "Yield to maturity",
+             _yield(bond.yield_to_maturity(valuation_date_))],
+            ["Yield, no reinvestment (real)" if bond.inflation_linked else "Yield, no reinvestment",
+             _yield(bond.yield_without_reinvestment(valuation_date_))],
+            ["Maturity", bond.maturity.isoformat()],
+        ],
+        [
+            ["Payment frequency", "Annual (assumed)"],
+            ["Inflation-linked", "Yes" if bond.inflation_linked else "No"],
+            ["Callable", "Yes" if bond.callable else "No"],
+        ],
+        [
+            ["Minimum size", format(bond.minimum_size, ",f")],
+            ["Size increment", format(bond.size_increment, ",f")],
+        ],
+        [
+            ["Price source", _source(bond)],
+            ["Quote received", quote_.as_of.strftime("%Y-%m-%d %H:%M %Z") if quote_ is not None else "-"],
+            ["Valuation date", valuation_date_.isoformat()],
+        ],
+        [
+            ["Clean price", _price(clean_price_)],
+            ["Accrued interest", _price(dirty_price_ - clean_price_ if dirty_price_ is not None else None)],
+            ["Dirty price", _price(dirty_price_)],
+        ],
     ]
-    print_table(["Field", "Value"], rows_, first_right_aligned_column=1, separators_after=(4, 8, 13, 16, 18, 21),
-                title=bond.description)
+    print_grouped_table(["Field", "Value"], groups_, title=bond.description)
 
 
 def print_bonds(bonds: List[Bond], valuation_date: Optional[date] = None) -> None:
@@ -101,8 +115,8 @@ def print_bonds_table(bonds: List[Bond], valuation_date: Optional[date] = None, 
         for bond_ in shown_
     ]
     count_ = _instrument_count(len(shown_), len(bonds), has_lei)
-    print_table(headers_, rows_, first_right_aligned_column=4, title=f"{title} ({count_})")
-    print(f"({len(rows_)} {'row' if len(rows_) == 1 else 'rows'})")
+    print_table(headers_, rows_, first_right_aligned_column=headers_.index("Clean price"), title=f"{title} ({count_})")
+    print_row_count(len(rows_))
 
 
 def _instrument_count(shown: int, total: int, filtered: bool) -> str:

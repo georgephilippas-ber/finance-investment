@@ -1,5 +1,4 @@
 from asyncio import run
-from calendar import monthrange
 from datetime import date
 
 from dotenv import load_dotenv
@@ -7,13 +6,12 @@ from dotenv import load_dotenv
 from clients.interactive_brokers.client import connect, disconnect, print_full_account_information
 from clients.interactive_brokers.scanners.fixed_income import quote_bonds, interactive_brokers_scan_bonds
 from clients.interactive_brokers.scanners.printing import print_bonds_table, print_bond, print_bonds
+from helpers import add_months
+from settings import MONTHS_PER_YEAR
 
 
 def _maturity_date_in_years(years: int) -> str:
-    today = date.today()
-    year = today.year + years
-    day = min(today.day, monthrange(year, today.month)[1])
-    return date(year, today.month, day).strftime("%Y%m%d")
+    return add_months(date.today(), MONTHS_PER_YEAR * years).strftime("%Y%m%d")
 
 
 async def _main() -> None:

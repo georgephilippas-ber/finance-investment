@@ -14,10 +14,10 @@ their yields.
 | [Exchanges](documentation/exchanges.md)                            | Exchanges database with IBKR codes: get and print.                                                                        |
 | [Mappings](documentation/mappings.md)                              | `SecurityInformationMapping`: converting between IBKR and EODHD, and what it relies on (ISIN, exchange mapping, currency). |
 | [Domain](documentation/domain.md)                                  | Public data structures: `Provider`, `SecurityInformation`, `EndOfDayPrice`, `AccountInformation`, `PortfolioPosition`, `Lot`, and an index of the bond types. |
-| [Printing](documentation/printing.md)                              | `print_table`, `print_section`, `print_subsection`.                                                                       |
+| [Printing](documentation/printing.md)                              | `print_table`, `print_grouped_table`, `print_row_count`, `print_section`, `print_subsection`.                             |
 | [Scanners](documentation/scanners.md)                              | `interactive_brokers_scan_bonds`, `quote_bonds`, `Bond` (dirty price, yield to maturity, yield without reinvestment), printing. |
 | [LEI resolver](documentation/lei_resolver.md)                      | `get_legal_entity_by_isin`: the issuer (LEI, legal name) of a security by ISIN, via ESMA FIRDS and GLEIF.                |
-| [Helpers](documentation/helpers.md)                                | `latest_weekday`.                                                                                                         |
+| [Helpers](documentation/helpers.md)                                | `add_months`, `latest_weekday`.                                                                                           |
 | [Bond scanning tutorial](research/bond-scanning-europe.md)         | IBKR scanner codes, filter tags and ready-made queries for European government and corporate bonds.                      |
 
 ## Layout
@@ -30,7 +30,7 @@ clients/
     mappings.py           SecurityInformationMapping
   interactive_brokers/
     client.py             account, positions, printing
-    configuration.py      connection settings and tracker key (from the environment)
+    configuration.py      connection settings, default timeouts, yield decimals, tracker key
     domain.py             account and position types
     position_tracker.py   PositionTracker, Lot
     scanners/             bond scanning
@@ -41,19 +41,34 @@ clients/
       _shared.py          internal: scans, contract details, issuer lookup, prices
   eodhd/                  EODHD client, configuration, internal symbol type
   lei_resolver/           issuer LEI and legal name by ISIN (ESMA FIRDS, GLEIF)
-printing/                 print_table, print_section, print_subsection
-helpers/                  latest_weekday
+printing/                 print_table, print_grouped_table, print_row_count, print_section, print_subsection
+helpers/                  add_months, latest_weekday
 domain/
   exchanges/              exchanges.sqlite and the MIC mapping JSON files
   positions/              positions.sqlite (position tracker)
 cache/eodhd/              cached EODHD responses
 documentation/            these pages and examples/main_features.py
 main.py                   prints the IBKR account summary and positions
+settings.py               project-wide constants (see Settings below)
 research/
   main.py                 prints the account summary and positions, then scans and prints EUR corporate bonds
-  configuration.py        file name for a dump of IBKR's scanner parameters
+  configuration.py        file name for a dump of IBKR's scanner parameters (not used by any script)
   bond-scanning-europe.md bond scanning tutorial
 ```
+
+## Settings
+
+`settings.py` in the project root holds the project-wide constants:
+
+| Name | Value | Used for |
+|---|---|---|
+| `PROJECT_ROOT` | the repository root | every path to `domain/`, `cache/` and the tracker database |
+| `HTTP_TIMEOUT_SECONDS` | `30` | every EODHD, ESMA FIRDS and GLEIF request |
+| `MONTHS_PER_YEAR` | `12` | calendar arithmetic |
+
+Provider-specific settings stay with their client: `clients/interactive_brokers/configuration.py` (connection, default
+timeouts, `YIELD_DECIMALS`) and `clients/eodhd/configuration.py` (cache directory). The root file is named `settings.py`
+rather than `configuration.py` so it cannot be confused with those when a module is run directly as a script.
 
 ## Setup
 

@@ -13,6 +13,20 @@ Prints a boxed table sized to its contents.
 - `title` — optional title printed as a framed, centered top row spanning the table; the last column is widened
   if the title is longer than the table.
 
+## `print_grouped_table`
+```python
+def print_grouped_table(headers: List[str], groups: List[List[List[str]]], *, title: Optional[str] = None) -> None
+```
+A two-column field/value table given as groups of rows: a separator is drawn after each group, so separator positions
+never need counting by hand. The value column is right-aligned. Used by the account summary and the bond sheet.
+
+## `print_row_count`
+```python
+def print_row_count(count: int, detail: Optional[str] = None) -> None
+```
+Prints the footer under a table: `(1 row)`, `(21 rows)`, or with `detail` appended, `(5 rows, 3 with IBKR)`. Used by
+every table that shows a row count.
+
 ## `print_section`
 ```python
 def print_section(title: str) -> None

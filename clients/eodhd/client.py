@@ -10,6 +10,7 @@ import requests
 from pandas import DataFrame, read_sql_query
 
 from clients.common.domain import EndOfDayPrice, Provider, SecurityInformation
+from settings import HTTP_TIMEOUT_SECONDS, PROJECT_ROOT
 
 if __package__:
     from .configuration import CACHE_DIRECTORY
@@ -18,6 +19,8 @@ else:
     from configuration import CACHE_DIRECTORY
     from clients.eodhd.domain import _Symbol
 
+
+_SEARCH_LIMIT = 500
 
 def _api_key() -> str:
     key_: Optional[str] = os.getenv("EODHD_API_KEY")
@@ -38,7 +41,7 @@ def _get_exchanges(load_from_cache: bool = True) -> List[Dict]:
     response = requests.get(
         "https://eodhd.com/api/exchanges-list/",
         params={"api_token": _api_key()},
-        timeout=30,
+        timeout=HTTP_TIMEOUT_SECONDS,
     )
 
     response.raise_for_status()
@@ -57,7 +60,7 @@ def _get_exchanges(load_from_cache: bool = True) -> List[Dict]:
 
 def _create_exchanges_database(load_from_cache: bool = True) -> Path:
     exchanges_ = _get_exchanges(load_from_cache=load_from_cache)
-    directory_ = Path(__file__).resolve().parents[2] / "domain" / "exchanges"
+    directory_ = PROJECT_ROOT / "domain" / "exchanges"
 
     with (directory_ / "us_operating_mic_mapping.json").open(encoding="utf-8") as file_:
         us_mapping_ = json.load(file_)
@@ -120,7 +123,7 @@ def _create_exchanges_database(load_from_cache: bool = True) -> Path:
 
 
 def read_exchanges_database() -> DataFrame:
-    filename_ = Path(__file__).resolve().parents[2] / "domain" / "exchanges" / "exchanges.sqlite"
+    filename_ = PROJECT_ROOT / "domain" / "exchanges" / "exchanges.sqlite"
     with closing(connect(f"{filename_.as_uri()}?mode=ro", uri=True)) as connection_:
         return read_sql_query("SELECT * FROM exchanges", connection_)
 
@@ -166,7 +169,7 @@ def _get_symbols_by_ticker(
     response = requests.get(
         f"https://eodhd.com/api/exchange-symbol-list/{exchange_}",
         params={"symbols": ticker_, "fmt": "json", "api_token": _api_key()},
-        timeout=30,
+        timeout=HTTP_TIMEOUT_SECONDS,
     )
     response.raise_for_status()
     records_ = response.json()
@@ -194,14 +197,14 @@ def _get_symbols_by_isin(isin: str, *, currency: str) -> List[_Symbol]:
 
     response = requests.get(
         f"https://eodhd.com/api/search/{isin}",
-        params={"limit": 500, "fmt": "json", "api_token": _api_key()},
-        timeout=30,
+        params={"limit": _SEARCH_LIMIT, "fmt": "json", "api_token": _api_key()},
+        timeout=HTTP_TIMEOUT_SECONDS,
     )
     response.raise_for_status()
     records_ = response.json()
     if not isinstance(records_, list) or not all(isinstance(record_, dict) for record_ in records_):
         raise ValueError()
-    if len(records_) == 500:
+    if len(records_) == _SEARCH_LIMIT:
         raise LookupError("> limit")
 
     return [
@@ -245,7 +248,7 @@ def _get_symbols_in_exchange(exchange: str, load_from_cache: bool = True) -> Lis
         response = requests.get(
             f"https://eodhd.com/api/exchange-symbol-list/{eodhd_code}",
             params={"fmt": "json", "api_token": _api_key()},
-            timeout=30,
+            timeout=HTTP_TIMEOUT_SECONDS,
         )
         response.raise_for_status()
         records_ = response.json()
@@ -286,7 +289,7 @@ def get_latest_price(security: SecurityInformation, *, lookback_days: int = 14) 
             "fmt": "json",
             "api_token": _api_key(),
         },
-        timeout=30,
+        timeout=HTTP_TIMEOUT_SECONDS,
     )
     response.raise_for_status()
     records_ = response.json()
