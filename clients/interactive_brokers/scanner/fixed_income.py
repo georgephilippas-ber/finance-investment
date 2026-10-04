@@ -1,20 +1,20 @@
 from asyncio import gather
 from dataclasses import replace
 from datetime import date, datetime, timezone
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from fractions import Fraction
 from logging import getLogger
-from math import isnan, log10
+from math import isnan
 from typing import List, Optional, Tuple, Unpack
 
-from ib_async import IB, Contract, ContractDetails, LimitOrder, OrderState, ScannerSubscription, TagValue, Ticker
+from ib_async import IB, Contract, ContractDetails, ScannerSubscription, TagValue, Ticker
 
 if __package__:
     from .domain import Bond, BondFilters, BondQuote
 else:
     from domain import Bond, BondFilters, BondQuote
 
-__all__ = ["get_face_value_per_unit", "quote_bonds", "scan_bonds"]
+__all__ = ["scan_bonds", "quote_bonds"]
 
 _logger = getLogger(__name__)
 
@@ -98,6 +98,7 @@ def _to_quote(ticker: Optional[Ticker]) -> Optional[BondQuote]:
         price_, live_ = ticker.close, False
     if isnan(price_) or price_ <= 0:
         return None
+
     return BondQuote(price=Decimal(str(price_)), as_of=ticker.time or datetime.now(timezone.utc), live=live_)
 
 
