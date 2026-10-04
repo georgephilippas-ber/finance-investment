@@ -7,7 +7,7 @@ from typing import Any, List, Optional, TypedDict
 from numpy import array, full
 from scipy.optimize import brentq
 
-from clients.gleif.domain import LegalEntity
+from clients.lei_resolver.domain import LegalEntity
 from helpers import latest_weekday
 
 __all__ = ["Bond", "BondFilters", "BondQuote", "SCANNER_ROW_LIMIT"]

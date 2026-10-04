@@ -80,8 +80,10 @@ def print_bonds(bonds: List[Bond], valuation_date: Optional[date] = None) -> Non
         print_bond(bond_, valuation_date_)
 
 
-def print_bonds_table(bonds: List[Bond], valuation_date: Optional[date] = None, *, title: str = "BONDS") -> None:
+def print_bonds_table(bonds: List[Bond], valuation_date: Optional[date] = None, *, title: str = "BONDS",
+                      has_lei: bool = False) -> None:
     valuation_date_ = valuation_date or latest_weekday()
+    shown_ = [bond_ for bond_ in bonds if not has_lei or bond_.legal_entity is not None]
     headers_: List[str] = ["Contract ID", "Name", "Issuer", "ISIN", "Clean price", "Coupon", "Years to maturity",
                            "Yield to maturity", "Yield, no reinvestment"]
     rows_: List[List[str]] = [
@@ -96,10 +98,10 @@ def print_bonds_table(bonds: List[Bond], valuation_date: Optional[date] = None, 
             _yield(bond_.yield_to_maturity(valuation_date_)),
             _yield(bond_.yield_without_reinvestment(valuation_date_)),
         ]
-        for bond_ in bonds
+        for bond_ in shown_
     ]
-    count_ = f"{len(bonds)} {'instrument' if len(bonds) == 1 else 'instruments'}"
-    if len(bonds) == SCANNER_ROW_LIMIT:
-        count_ = f"> {count_}"
+    total_ = f"{'> ' if len(bonds) == SCANNER_ROW_LIMIT else ''}{len(bonds)}"
+    noun_ = "instrument" if len(bonds) == 1 else "instruments"
+    count_ = f"{len(shown_)} of {total_} {noun_}" if has_lei else f"{total_} {noun_}"
     print_table(headers_, rows_, first_right_aligned_column=4, title=f"{title} ({count_})")
     print(f"({len(rows_)} {'row' if len(rows_) == 1 else 'rows'})")

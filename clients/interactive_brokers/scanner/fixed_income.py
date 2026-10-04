@@ -10,8 +10,8 @@ from typing import List, Optional, Tuple, Unpack
 from ib_async import IB, Contract, ContractDetails, ScannerSubscription, TagValue, Ticker
 from requests import RequestException
 
-from clients.gleif.client import get_legal_entity_by_isin
-from clients.gleif.domain import LegalEntity
+from clients.lei_resolver.client import get_legal_entity_by_isin
+from clients.lei_resolver.domain import LegalEntity
 
 if __package__:
     from .domain import SCANNER_ROW_LIMIT, Bond, BondFilters, BondQuote

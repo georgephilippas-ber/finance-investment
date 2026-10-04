@@ -16,7 +16,7 @@ their yields.
 | [Domain](documentation/domain.md)                                  | Public data structures: `Provider`, `SecurityInformation`, `EndOfDayPrice`, `AccountInformation`, `PortfolioPosition`, `Lot`, and an index of the bond types. |
 | [Printing](documentation/printing.md)                              | `print_table`, `print_section`, `print_subsection`.                                                                       |
 | [Bond scanner](documentation/scanner.md)                           | `interactive_brokers_scan_bonds`, `quote_bonds`, `Bond` (dirty price, yield to maturity, yield without reinvestment), `print_bond(s)`.        |
-| [GLEIF client](documentation/gleif.md)                             | `get_legal_entity_by_isin`: the issuer (LEI, legal name) of a security by ISIN.                                          |
+| [LEI resolver](documentation/lei_resolver.md)                      | `get_legal_entity_by_isin`: the issuer (LEI, legal name) of a security by ISIN, via ESMA FIRDS and GLEIF.                |
 | [Helpers](documentation/helpers.md)                                | `latest_weekday`.                                                                                                         |
 | [Bond scanning tutorial](research/bond-scanning-europe.md)         | IBKR scanner codes, filter tags and ready-made queries for European government and corporate bonds.                      |
 
@@ -39,7 +39,7 @@ clients/
       domain.py           Bond, BondQuote, BondFilters
       printing.py         print_bond, print_bonds, print_bonds_table
   eodhd/                  EODHD client, configuration, internal symbol type
-  gleif/                  GLEIF client: issuer LEI by ISIN
+  lei_resolver/           issuer LEI and legal name by ISIN (ESMA FIRDS, GLEIF)
 printing/                 print_table, print_section, print_subsection
 helpers/                  latest_weekday
 domain/

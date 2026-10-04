@@ -12,7 +12,7 @@ prints them. For scan codes, filter tags and ready-made European queries see the
 | `printing.py` | [`print_bond`](#print_bond), [`print_bonds`](#print_bonds), [`print_bonds_table`](#print_bonds_table) |
 
 - Nothing here places orders. Requests are IBKR scanner, contract-details and market-data requests, plus one
-  [GLEIF](gleif.md) lookup per scanned bond.
+  [LEI resolver](lei_resolver.md) lookup (ESMA FIRDS and GLEIF) per scanned bond.
 - Bond prices are **clean** and **per 100 of face value**, as IBKR quotes them. They are not amounts of money.
 - Yields and calculations default to [`latest_weekday()`](helpers.md#latest_weekday) as the valuation date, so a
   weekend run lines up with Friday's closing prices.
@@ -39,7 +39,7 @@ One contract-details request is made per result, concurrently. IBKR leaves most 
 | `annual_coupon`, `maturity` | IBKR's coupon and maturity when present; otherwise read from `descAppend` (`OBL 2 1/2 04/16/31` → 0.025, 2031-04-16) |
 | `currency` | IBKR's contract currency when present; otherwise the `currencyLike` filter; otherwise `None` |
 | `inflation_linked` | `True` when IBKR flags an index-ratio factor (`evRule` starting with `factor`), e.g. `DBRI` |
-| `legal_entity` | The issuer from [GLEIF](gleif.md#get_legal_entity_by_isin), looked up by ISIN (at most 4 requests at a time); `None` when GLEIF has no mapping or the lookup fails (logged as a warning). Mappings are mostly missing for international `XS…` ISINs: in one EUR corporate scan, 16 of 50 bonds had one |
+| `legal_entity` | The issuer from the [LEI resolver](lei_resolver.md#get_legal_entity_by_isin): issuer LEI from ESMA FIRDS (or GLEIF), details from GLEIF; at most 4 bonds resolved at a time. `None` when neither register knows the ISIN or the lookup fails (logged as a warning). A 50-bond EUR corporate scan resolved all 50, adding about 15 seconds |
 
 **Skipped bonds.** A bond whose description cannot be read (e.g. a floating-rate note) is left out with a logged
 warning, so one bad result does not fail the whole scan.
@@ -116,7 +116,7 @@ prices counts as two keys. Match bonds by `contract_id`.
 - `description` — IBKR's `descAppend`, Bloomberg style: issuer code, coupon, maturity (`OBL 2 1/2 04/16/31`).
 - `bond_type` — IBKR's trading class: the issuer or programme code (`DBR`, `OBL`, `DBRI`, `VW`, `PBBGR`).
 - `annual_coupon` — a fraction of face value: `0.025` for 2.5 %.
-- `legal_entity` — the issuing [`LegalEntity`](gleif.md#legalentity) from GLEIF: LEI, legal name, country, status. It is
+- `legal_entity` — the issuing [`LegalEntity`](lei_resolver.md#legalentity): LEI, legal name, country, status. It is
   the legal issuer, which can be a subsidiary (an `ACAFP` bond can belong to Crédit Agricole Assurances).
 - `minimum_size`, `size_increment` — in IBKR **quantity units**, which are not necessarily currency. A what-if order
   on a Bund showed one unit = €1,000 of face value, so `minimum_size = 100` would be €100,000. Check a bond's unit
@@ -175,8 +175,10 @@ A [`print_bond`](#print_bond) sheet for each bond, separated by a blank line. Al
 
 ### `print_bonds_table`
 ```python
-def print_bonds_table(bonds: List[Bond], valuation_date: Optional[date] = None, *, title: str = "BONDS") -> None
+def print_bonds_table(bonds: List[Bond], valuation_date: Optional[date] = None, *, title: str = "BONDS", has_lei: bool = False) -> None
 ```
+With `has_lei=True`, only bonds with a `legal_entity` are printed and the title shows how many were kept, e.g.
+**BONDS (16 of > 50 instruments)**.
 Titled `title` followed by the number of bonds, e.g. **BONDS (21 instruments)**. At exactly 50, IBKR's scanner cap, it
 reads **(> 50 instruments)**, since more bonds probably matched. One row per bond and a row count. Columns: Contract ID, Name (`description`), Issuer (the legal name from `legal_entity`), ISIN, Clean price, Coupon, Years to
 maturity, Yield to maturity, Yield, no reinvestment.
