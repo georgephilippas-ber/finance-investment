@@ -5,7 +5,7 @@ below comes from IBKR's scanner parameters XML, returned by `ib.reqScannerParame
 `research/main.py` saves it as `interactive_brokers_scanner_reference.xml`; if IBKR changes its scanner, save a fresh
 copy and check the codes against it.
 
-The functions used here (`interactive_brokers_scan_bonds`, `quote_bonds`, `print_bonds`, …) are documented in
+The functions used here (`interactive_brokers_scan_bonds`, `quote_bonds`, `print_bonds_table`, …) are documented in
 [Bond scanner](../documentation/scanner.md).
 
 ---
@@ -353,20 +353,20 @@ await interactive_brokers_scan_bonds(
 
 ## 8. Prices and yields
 
-`quote_bonds` returns the same bonds with a `quote` (clean price, time, live flag); `print_bonds` and `print_bond`
+`quote_bonds` returns the same bonds with a `quote` (clean price, time, live flag); `print_bonds_table` and `print_bond`
 show them with their yields:
 
 ```python
 from clients.interactive_brokers.scanner.fixed_income import quote_bonds
-from clients.interactive_brokers.scanner.printing import print_bond, print_bonds
+from clients.interactive_brokers.scanner.printing import print_bond, print_bonds_table
 
 quoted = await quote_bonds(ib, bonds)
-print_bonds(quoted, title="GERMAN GOVERNMENT BONDS")
+print_bonds_table(quoted, title="GERMAN GOVERNMENT BONDS")
 print_bond(quoted[0])
 
 bond = quoted[0]
-bond.dirty_price()                 # 98.193 for OBL 2 1/2 04/16/31 at 97.035 clean
-bond.yield_to_maturity()           # 3.21 (%)
+bond.dirty_price()  # 98.193 for OBL 2 1/2 04/16/31 at 97.035 clean
+bond.yield_to_maturity()  # 3.21 (%)
 bond.yield_without_reinvestment()  # 3.04 (%), coupons kept as cash
 ```
 

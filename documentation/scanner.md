@@ -9,7 +9,7 @@ prints them. For scan codes, filter tags and ready-made European queries see the
 | `__init__.py` | Hides IBKR's harmless "API scanner subscription cancelled" message (error 162), which ib_async logs as an error after every one-shot scan. Other 162 errors still show. Applied on import of any scanner module. |
 | `fixed_income.py` | [`interactive_brokers_scan_bonds`](#interactive_brokers_scan_bonds), [`quote_bonds`](#quote_bonds) |
 | `domain.py` | [`BondFilters`](#bondfilters), [`BondQuote`](#bondquote), [`Bond`](#bond) |
-| `printing.py` | [`print_bond`](#print_bond), [`print_bonds`](#print_bonds) |
+| `printing.py` | [`print_bond`](#print_bond), [`print_bonds_table`](#print_bonds) |
 
 - Nothing here places orders. Requests are IBKR scanner, contract-details and market-data requests, plus one
   [GLEIF](gleif.md) lookup per scanned bond.
@@ -166,7 +166,7 @@ Titled with the bond's description. A two-column sheet in groups:
 Every calculation uses the one `valuation_date` (default `latest_weekday()`), which the sheet shows. Yield labels end
 in "(real)" for inflation-linked bonds.
 
-### `print_bonds`
+### `print_bonds_table`
 ```python
 def print_bonds(bonds: List[Bond], valuation_date: Optional[date] = None, *, title: str = "BONDS") -> None
 ```
@@ -179,17 +179,17 @@ maturity, Yield to maturity, Yield, no reinvestment.
 ```python
 from clients.interactive_brokers.client import connect, disconnect
 from clients.interactive_brokers.scanner.fixed_income import quote_bonds, interactive_brokers_scan_bonds
-from clients.interactive_brokers.scanner.printing import print_bond, print_bonds
+from clients.interactive_brokers.scanner.printing import print_bond, print_bonds_table
 
 ib = await connect()
 try:
-    bonds = await interactive_brokers_scan_bonds(ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.NON-US",
-                                                 scan_code="HIGH_BOND_ASK_YIELD_ALL", issuerCountryIs="DE",
-                                                 currencyLike="EUR",
-                                                 maturityDateAbove="20281002", maturityDateBelow="20311002")
-    quoted = await quote_bonds(ib, bonds)
-    print_bonds(quoted, title="GERMAN GOVERNMENT BONDS")
-    print_bond(quoted[0])
+  bonds = await interactive_brokers_scan_bonds(ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.NON-US",
+                                               scan_code="HIGH_BOND_ASK_YIELD_ALL", issuerCountryIs="DE",
+                                               currencyLike="EUR",
+                                               maturityDateAbove="20281002", maturityDateBelow="20311002")
+  quoted = await quote_bonds(ib, bonds)
+  print_bonds_table(quoted, title="GERMAN GOVERNMENT BONDS")
+  print_bond(quoted[0])
 finally:
-    disconnect(ib)
+  disconnect(ib)
 ```

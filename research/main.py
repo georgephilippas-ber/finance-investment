@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 from clients.interactive_brokers.client import connect, disconnect, print_full_account_information
 from clients.interactive_brokers.scanner.fixed_income import quote_bonds, interactive_brokers_scan_bonds
-from clients.interactive_brokers.scanner.printing import print_bonds, print_bond
+from clients.interactive_brokers.scanner.printing import print_bonds_table, print_bond
 
 
 def _maturity_date_in_years(years: int) -> str:
@@ -40,7 +40,7 @@ async def _main() -> None:
 
         quoted_corporate_ = await quote_bonds(ib, bonds_corporate_)
         print()
-        print_bonds(quoted_corporate_, title="EUR INVESTMENT-GRADE CORPORATES, 2-5 YEARS")
+        print_bonds_table(quoted_corporate_, title="EUR INVESTMENT-GRADE CORPORATES, 2-5 YEARS")
         print()
         print_bond(quoted_corporate_[0])
 
