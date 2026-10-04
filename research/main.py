@@ -35,7 +35,7 @@ async def _main() -> None:
                                                                 bondDefaultedIs='false',
                                                                 bondAmtOutstandingAbove=100,
                                                                 bondInitialSizeAbove=1,
-                                                                bondInitialSizeBelow=100,
+                                                                bondInitialSizeBelow=10,
                                                                 )
 
         quoted_corporate_ = await quote_bonds(ib, bonds_corporate_)

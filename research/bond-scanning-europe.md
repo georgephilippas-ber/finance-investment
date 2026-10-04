@@ -110,7 +110,7 @@ Most numeric filters come in pairs, `...Above` and `...Below`. Pass them as stri
 |-----------------------------------------------|----------------------------------------------------------------|
 | `currencyLike`                                | `EUR`, `GBP`, `CHF`, `USD`, `CAD`, `AUD`, `BRL`, `HKD`         |
 | `issuerCountryIs`                             | ISO 2-letter code (see section 5)                              |
-| `maturityDateAbove` / `Below`                 | Years from today (`5`), `mm/yyyy` (`06/2030`) or `yyyymmdd`    |
+| `maturityDateAbove` / `Below`                 | `yyyymmdd` only (IBKR rejects `mm/yyyy` and years)             |
 | `couponRateAbove` / `Below`                   | Coupon in %                                                    |
 | `bondAskYieldAbove` / `Below`                 | Yield at the ask, in %                                         |
 | `bondBidYieldAbove` / `Below`                 | Yield at the bid, in %                                         |
@@ -143,7 +143,7 @@ Most numeric filters come in pairs, `...Above` and `...Below`. Pass them as stri
 | `bondIssuerLike`                        | Issuer name, partial match (e.g. `Siemens`)                                      |
 | `bondStkSymbolIs`                       | Ticker of the issuer's stock (e.g. `SAP`)                                        |
 | `bondCallableIs`                        | `true` only / `false` exclude                                                    |
-| `bondNextCallDateAbove` / `Below`       | Call protection: same formats as maturity date                                   |
+| `bondNextCallDateAbove` / `Below`       | Call protection: a date, presumably `yyyymmdd` like maturity (untested)          |
 | `bondPaymentFreqIs`                     | `1` annual, `2` semi-annual, `4` quarterly, `12` monthly, `0` at maturity        |
 | `bondDefaultedIs`                       | `false` to exclude defaulted bonds                                               |
 | `bondTradingFlatIs`                     | `false` to exclude bonds trading without accrued interest (often distressed)     |
@@ -201,7 +201,7 @@ Pass any filter from section 4 as a keyword argument; values are converted to st
 `BondFilters` still work but are flagged by type checkers.
 
 `interactive_brokers_scan_bonds` returns a list of `Bond` objects with ISIN, coupon, maturity and the other details. Section 8 shows how to
-add prices and yields; [Bond scanner](../documentation/scanner.md#scan_bonds) explains where each field comes from.
+add prices and yields; [Bond scanner](../documentation/scanner.md#interactive_brokers_scan_bonds) explains where each field comes from.
 
 ---
 
@@ -210,12 +210,12 @@ add prices and yields; [Bond scanner](../documentation/scanner.md#scan_bonds) ex
 ### 7.1 German Bunds, 2 to 10 years, highest yield first
 
 ```python
-await scan_bonds(
+await interactive_brokers_scan_bonds(
     ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.NON-US", scan_code="HIGH_BOND_ASK_YIELD_ALL",
     issuerCountryIs="DE",
     currencyLike="EUR",
-    maturityDateAbove=2,
-    maturityDateBelow=10,
+    maturityDateAbove="20281002",   # 2 years from 2 Oct 2026
+    maturityDateBelow="20361002",   # 10 years
     bondVarCouponRateIs="false",
 )
 ```
@@ -225,23 +225,23 @@ await scan_bonds(
 ```python
 results = {}
 for country in ["IT", "ES", "PT", "GR"]:
-    results[country] = await scan_bonds(
+    results[country] = await interactive_brokers_scan_bonds(
         ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.NON-US", scan_code="HIGH_BOND_ASK_YIELD_ALL",
         issuerCountryIs=country,
         currencyLike="EUR",
         bondAskYieldAbove=3,
-        maturityDateBelow=7,
+        maturityDateBelow="20331002",   # 7 years
     )
 ```
 
 ### 7.3 Short-dated core-euro govts (cash-like ladder)
 
 ```python
-await scan_bonds(
+await interactive_brokers_scan_bonds(
     ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.NON-US", scan_code="NEAR_MATURITY_DATE",
     issuerCountryIs="NL",
     currencyLike="EUR",
-    maturityDateBelow="12/2027",
+    maturityDateBelow="20271231",
     bondAmtOutstandingAbove=5_000,   # >= EUR 5bn outstanding, i.e. liquid lines
 )
 ```
@@ -249,12 +249,12 @@ await scan_bonds(
 ### 7.4 Investment-grade EUR corporates, plain vanilla, 3 to 7 years
 
 ```python
-await scan_bonds(
+await interactive_brokers_scan_bonds(
     ib, instrument="BOND", location="BOND.WW", scan_code="HIGH_BOND_ASK_YIELD_ALL",
     currencyLike="EUR",
     bondCreditRating="highGrade",
-    maturityDateAbove=3,
-    maturityDateBelow=7,
+    maturityDateAbove="20291002",   # 3 years
+    maturityDateBelow="20331002",   # 7 years
     bondCallableIs="false",
     excludeConvertible="true",
     bondVarCouponRateIs="false",
@@ -266,7 +266,7 @@ await scan_bonds(
 ### 7.5 A-rated or better from both agencies, French issuers
 
 ```python
-await scan_bonds(
+await interactive_brokers_scan_bonds(
     ib, instrument="BOND", location="BOND.WW", scan_code="HIGH_SP_RATING_ALL",
     issuerCountryIs="FR",
     currencyLike="EUR",
@@ -282,7 +282,7 @@ does not say.
 ### 7.6 EUR high yield with guard rails
 
 ```python
-await scan_bonds(
+await interactive_brokers_scan_bonds(
     ib, instrument="BOND", location="BOND.WW", scan_code="HIGH_BOND_ASK_YIELD_ALL",
     currencyLike="EUR",
     bondCreditRating="highYield",
@@ -301,7 +301,7 @@ await scan_bonds(
 Many European corporate bonds have a EUR 100,000 minimum denomination. To leave those out:
 
 ```python
-await scan_bonds(
+await interactive_brokers_scan_bonds(
     ib, instrument="BOND", location="BOND.WW", scan_code="HIGH_BOND_ASK_YIELD_ALL",
     currencyLike="EUR",
     bondCreditRating="highGrade",
@@ -316,7 +316,7 @@ So `minimum_size = 1` means about €1,000 and `100` about €100,000. Check a b
 ### 7.8 One issuer's whole curve
 
 ```python
-await scan_bonds(
+await interactive_brokers_scan_bonds(
     ib, instrument="BOND", location="BOND.WW", scan_code="FAR_MATURITY_DATE",
     bondIssuerLike="Volkswagen",
     currencyLike="EUR",
@@ -327,21 +327,21 @@ await scan_bonds(
 
 ```python
 # Sovereigns: yield filters are available here
-await scan_bonds(ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.EU.EBS", scan_code="HIGH_BOND_ASK_YIELD_ALL", currencyLike="CHF")
+await interactive_brokers_scan_bonds(ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.EU.EBS", scan_code="HIGH_BOND_ASK_YIELD_ALL", currencyLike="CHF")
 
 # Corporates: SIX corporate data is price-only, so filter and sort on price
-await scan_bonds(
+await interactive_brokers_scan_bonds(
     ib, instrument="BOND", location="BOND.EU.EBS", scan_code="HIGH_COUPON_RATE",
     currencyLike="CHF",
     bondAskBelow=100,                # trading below par
-    maturityDateBelow=5,
+    maturityDateBelow="20311002",   # 5 years
 )
 ```
 
 ### 7.10 Low-carbon EUR corporates
 
 ```python
-await scan_bonds(
+await interactive_brokers_scan_bonds(
     ib, instrument="BOND", location="BOND.WW", scan_code="SCAN_esgEmissionsScore_DESC",
     currencyLike="EUR",
     bondCreditRating="highGrade",

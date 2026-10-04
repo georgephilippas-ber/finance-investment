@@ -1,4 +1,4 @@
-from asyncio import gather
+from asyncio import Semaphore, gather, to_thread
 from dataclasses import replace
 from datetime import date, datetime, timezone
 from decimal import Decimal
@@ -8,15 +8,21 @@ from math import isnan
 from typing import List, Optional, Tuple, Unpack
 
 from ib_async import IB, Contract, ContractDetails, ScannerSubscription, TagValue, Ticker
+from requests import RequestException
+
+from clients.gleif.client import get_legal_entity_by_isin
+from clients.gleif.domain import LegalEntity
 
 if __package__:
-    from .domain import Bond, BondFilters, BondQuote
+    from .domain import SCANNER_ROW_LIMIT, Bond, BondFilters, BondQuote
 else:
-    from domain import Bond, BondFilters, BondQuote
+    from domain import SCANNER_ROW_LIMIT, Bond, BondFilters, BondQuote
 
 __all__ = ["interactive_brokers_scan_bonds", "quote_bonds"]
 
 _logger = getLogger(__name__)
+
+_GLEIF_CONCURRENCY = 4
 
 
 def _parse_description(description: str) -> Tuple[Decimal, date]:
@@ -45,7 +51,6 @@ def _to_bond(details: ContractDetails, currency: Optional[str]) -> Bond:
         currency=currency_,
         annual_coupon=coupon_ / 100,  # IBKR and descAppend quote coupons in percent
         maturity=maturity_,
-        issuer=details.longName or None,
         inflation_linked=details.evRule.startswith("factor"),  # index-ratio factor, e.g. DBRI
         callable=details.callable,
         minimum_size=Decimal(str(details.minSize)),
@@ -60,12 +65,23 @@ async def _get_details(ib: IB, contract_id: int) -> ContractDetails:
     return details_[0]
 
 
+async def _get_legal_entity(isin: Optional[str], semaphore: Semaphore) -> Optional[LegalEntity]:
+    if isin is None:
+        return None
+    async with semaphore:
+        try:
+            return await to_thread(get_legal_entity_by_isin, isin)
+        except (RequestException, LookupError, ValueError) as error_:
+            _logger.warning(f"No legal entity for ISIN {isin}: {error_}")
+            return None
+
+
 async def interactive_brokers_scan_bonds(
         client_: IB, *,
         instrument: str,
         location: str,
         scan_code: str,
-        rows: int = 50,
+        rows: int = SCANNER_ROW_LIMIT,
         **filters: Unpack[BondFilters],
 ) -> List[Bond]:
     subscription_ = ScannerSubscription(
@@ -85,7 +101,10 @@ async def interactive_brokers_scan_bonds(
         except ValueError:
             _logger.warning(
                 f"Skipping conId {item_.contract.conId}: cannot read coupon/maturity from {item_.descAppend!r}.")
-    return bonds_
+
+    semaphore_ = Semaphore(_GLEIF_CONCURRENCY)
+    entities_ = await gather(*(_get_legal_entity(bond_.isin, semaphore_) for bond_ in bonds_))
+    return [replace(bond_, legal_entity=entity_) for bond_, entity_ in zip(bonds_, entities_)]
 
 
 def _to_quote(ticker: Optional[Ticker]) -> Optional[BondQuote]:

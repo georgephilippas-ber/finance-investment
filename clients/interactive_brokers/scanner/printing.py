@@ -8,9 +8,9 @@ from helpers import latest_weekday
 from printing import print_table
 
 if __package__:
-    from .domain import Bond
+    from .domain import SCANNER_ROW_LIMIT, Bond
 else:
-    from domain import Bond
+    from domain import SCANNER_ROW_LIMIT, Bond
 
 __all__ = ["print_bond", "print_bonds"]
 
@@ -38,13 +38,17 @@ def print_bond(bond: Bond, valuation_date: Optional[date] = None) -> None:
     quote_ = bond.quote
     clean_price_ = quote_.price if quote_ is not None else None
     dirty_price_ = bond.dirty_price(valuation_date_)
+    entity_ = bond.legal_entity
     rows_: List[List[str]] = [
         ["Description", bond.description],
         ["ISIN", bond.isin or "-"],
         ["IBKR contract ID", str(bond.contract_id)],
         ["Bond type", bond.bond_type],
-        ["Issuer", bond.issuer or "-"],
         ["Currency", bond.currency or "-"],
+        ["Issuer", entity_.legal_name if entity_ is not None else "-"],
+        ["LEI", entity_.lei if entity_ is not None else "-"],
+        ["Issuer country", entity_.country if entity_ is not None else "-"],
+        ["LEI status", entity_.status if entity_ is not None else "-"],
         ["Coupon", _coupon(bond)],
         ["Years to maturity", format(bond.years_to_maturity(valuation_date_), ".2f")],
         ["Yield to maturity (real)" if bond.inflation_linked else "Yield to maturity",
@@ -64,18 +68,19 @@ def print_bond(bond: Bond, valuation_date: Optional[date] = None) -> None:
         ["Accrued interest", _price(dirty_price_ - clean_price_ if dirty_price_ is not None else None)],
         ["Dirty price", _price(dirty_price_)],
     ]
-    print_table(["Field", "Value"], rows_, first_right_aligned_column=1, separators_after=(5, 10, 13, 15, 18),
+    print_table(["Field", "Value"], rows_, first_right_aligned_column=1, separators_after=(4, 8, 13, 16, 18, 21),
                 title=bond.description)
 
 
 def print_bonds(bonds: List[Bond], valuation_date: Optional[date] = None, *, title: str = "BONDS") -> None:
     valuation_date_ = valuation_date or latest_weekday()
-    headers_: List[str] = ["Contract ID", "Name", "ISIN", "Clean price", "Coupon", "Years to maturity",
+    headers_: List[str] = ["Contract ID", "Name", "Issuer", "ISIN", "Clean price", "Coupon", "Years to maturity",
                            "Yield to maturity", "Yield, no reinvestment"]
     rows_: List[List[str]] = [
         [
             str(bond_.contract_id),
             bond_.description,
+            bond_.legal_entity.legal_name if bond_.legal_entity is not None else "-",
             bond_.isin or "-",
             _price(bond_.quote.price if bond_.quote is not None else None),
             _coupon(bond_),
@@ -85,5 +90,8 @@ def print_bonds(bonds: List[Bond], valuation_date: Optional[date] = None, *, tit
         ]
         for bond_ in bonds
     ]
-    print_table(headers_, rows_, first_right_aligned_column=3, title=title)
+    count_ = f"{len(bonds)} {'instrument' if len(bonds) == 1 else 'instruments'}"
+    if len(bonds) == SCANNER_ROW_LIMIT:
+        count_ = f"> {count_}"
+    print_table(headers_, rows_, first_right_aligned_column=4, title=f"{title} ({count_})")
     print(f"({len(rows_)} {'row' if len(rows_) == 1 else 'rows'})")

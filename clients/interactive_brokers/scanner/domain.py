@@ -7,9 +7,12 @@ from typing import Any, List, Optional, TypedDict
 from numpy import array, full
 from scipy.optimize import brentq
 
+from clients.gleif.domain import LegalEntity
 from helpers import latest_weekday
 
-__all__ = ["Bond", "BondFilters", "BondQuote"]
+__all__ = ["Bond", "BondFilters", "BondQuote", "SCANNER_ROW_LIMIT"]
+
+SCANNER_ROW_LIMIT = 50
 
 
 class BondFilters(TypedDict, total=False):
@@ -49,11 +52,11 @@ class Bond:
     currency: Optional[str]  # IBKR often leaves it empty for bonds
     annual_coupon: Decimal  # fraction of face value, e.g. 0.025 for 2.5%
     maturity: date  # coupons are treated as paid once a year, on the maturity anniversary
-    issuer: Optional[str] = None
     inflation_linked: bool = False
     callable: bool = False
     minimum_size: Decimal = Decimal(1)
     size_increment: Decimal = Decimal(1)
+    legal_entity: Optional[LegalEntity] = None
     quote: Optional[BondQuote] = None
 
     @property
