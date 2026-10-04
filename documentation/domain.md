@@ -13,9 +13,6 @@ Data structures that public functions take or return. All are dataclasses except
 | `Bond` | `clients/interactive_brokers/scanners/domain.py` | `interactive_brokers_scan_bonds`, `quote_bonds` | `quote_bonds`, `print_bond`, `print_bonds_table` |
 | `BondQuote` | `clients/interactive_brokers/scanners/domain.py` | inside `Bond.quote` | — |
 | `BondFilters` | `clients/interactive_brokers/scanners/domain.py` | — | `interactive_brokers_scan_bonds` |
-| `Etf` | `clients/interactive_brokers/scanners/domain.py` | `interactive_brokers_scan_etfs`, `quote_etfs` | `quote_etfs`, `print_etf`, `print_etfs`, `print_etfs_table` |
-| `EtfQuote` | `clients/interactive_brokers/scanners/domain.py` | inside `Etf.quote` | — |
-| `EtfFilters` | `clients/interactive_brokers/scanners/domain.py` | — | `interactive_brokers_scan_etfs` |
 
 ## Common
 
@@ -158,10 +155,9 @@ derives `opened` and the annualized estimate from them. No purchase cost or acco
 
 ## Scanners
 
-`Bond`, `BondQuote`, `BondFilters`, `Etf`, `EtfQuote` and `EtfFilters` are documented with the functions that use
-them, in [Scanners](scanners.md): [bond types](scanners.md#data-structures) and
-[ETF types](scanners.md#etf-data-structures). Like `Lot`, they are frozen. Bond prices are per 100 of face value
-rather than amounts of money; ETF prices are per share.
+`Bond`, `BondQuote` and `BondFilters` are documented with the functions that use them, in
+[Scanners](scanners.md#data-structures). Like `Lot`, `Bond` and `BondQuote` are frozen. Bond prices are per 100 of
+face value rather than amounts of money.
 
 ## Internal
 

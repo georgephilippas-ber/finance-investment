@@ -1,29 +1,25 @@
 # Scanners
 
-`clients/interactive_brokers/scanners/` — finds bonds and ETFs with IBKR's market scanner, prices them and prints
-them; for bonds it also computes yields. Scan codes, filter tags and ready-made queries are in the tutorials:
-[bonds](../research/bond-scanning-europe.md) and [ETFs](../research/etf-scanning-europe.md).
+`clients/interactive_brokers/scanners/` — finds bonds with IBKR's market scanner, prices them, computes yields and
+prints them. Scan codes, filter tags and ready-made European queries are in the
+[bond scanning tutorial](../research/bond-scanning-europe.md).
 
 | Module | Contents |
 |---|---|
 | `__init__.py` | Hides IBKR's harmless "API scanner subscription cancelled" message (error 162), which ib_async logs as an error after every one-shot scan. Other 162 errors still show. Applied on import of any scanner module. |
 | `fixed_income.py` | [`interactive_brokers_scan_bonds`](#interactive_brokers_scan_bonds), [`quote_bonds`](#quote_bonds) |
-| `exchange_traded_fund.py` | [`interactive_brokers_scan_etfs`](#interactive_brokers_scan_etfs), [`quote_etfs`](#quote_etfs) |
-| `domain.py` | [`BondFilters`](#bondfilters), [`BondQuote`](#bondquote), [`Bond`](#bond), [`EtfFilters`](#etffilters), [`EtfQuote`](#etfquote), [`Etf`](#etf), `SCANNER_ROW_LIMIT` |
-| `printing.py` | [`print_bond`](#print_bond), [`print_bonds`](#print_bonds), [`print_bonds_table`](#print_bonds_table), [`print_etf`](#print_etf), [`print_etfs`](#print_etfs), [`print_etfs_table`](#print_etfs_table) |
+| `domain.py` | [`BondFilters`](#bondfilters), [`BondQuote`](#bondquote), [`Bond`](#bond), `SCANNER_ROW_LIMIT` |
+| `printing.py` | [`print_bond`](#print_bond), [`print_bonds`](#print_bonds), [`print_bonds_table`](#print_bonds_table) |
 | `_shared.py` | Internal: running a scan and fetching contract details, reading the ISIN, resolving issuers, fetching prices. |
 
 - Nothing here places orders. Requests are IBKR scanner, contract-details and market-data requests, plus one
-  [LEI resolver](lei_resolver.md) lookup (ESMA FIRDS and GLEIF) per scanned instrument.
+  [LEI resolver](lei_resolver.md) lookup (ESMA FIRDS and GLEIF) per scanned bond.
 - **Prices are requested as delayed-frozen market data** (IBKR market-data type 4): real-time where you subscribe,
-  otherwise 15-minute delayed, and the last available price when the market is closed. Calling `quote_bonds` or
-  `quote_etfs` switches the whole `IB` session to this mode.
-- Bond prices are **clean** and **per 100 of face value**, as IBKR quotes them. They are not amounts of money. ETF
-  prices are per share, in the ETF's trading currency.
-- Bond yields and calculations default to [`latest_weekday()`](helpers.md#latest_weekday) as the valuation date, so a
+  otherwise 15-minute delayed, and the last available price when the market is closed. Calling `quote_bonds`
+  switches the whole `IB` session to this mode.
+- Bond prices are **clean** and **per 100 of face value**, as IBKR quotes them. They are not amounts of money.
+- Yields and calculations default to [`latest_weekday()`](helpers.md#latest_weekday) as the valuation date, so a
   weekend run lines up with Friday's closing prices.
-
-# Bonds
 
 ## Fetching
 
@@ -190,120 +186,7 @@ Titled `title` followed by the number of bonds, e.g. **BONDS (21 instruments)**.
 reads **(> 50 instruments)**, since more bonds probably matched. One row per bond and a row count. Columns: Contract ID, Name (`description`), Issuer (the legal name from `legal_entity`), ISIN, Clean price, Coupon, Years to
 maturity, Yield to maturity, Yield, no reinvestment.
 
-# ETFs
-
-## Fetching ETFs
-
-### `interactive_brokers_scan_etfs`
-```python
-async def interactive_brokers_scan_etfs(client_: IB, *, instrument: str, location: str, scan_code: str, rows: int = SCANNER_ROW_LIMIT, **filters: Unpack[EtfFilters]) -> List[Etf]
-```
-Runs one IBKR scan and returns the matching ETFs as [`Etf`](#etf)s, without quotes.
-- `instrument`, `location`, `scan_code` — e.g. `"STOCK.EU"`, `"STK.EU.IBIS-ETF"` (Xetra's ETF segment),
-  `"MOST_ACTIVE_AVG_USD"`. European ETFs are scanned as European stocks; US ETFs have their own instruments
-  (`ETF.EQ.US`, `ETF.FI.US`).
-- For `STOCK.*` instruments the ETF stock-type filter `stkTypes="inc:ETF"` is added unless you pass your own.
-- Results whose IBKR stock type is not `ETF` (ETNs, ETCs, ordinary shares) are dropped.
-
-| Field | Source |
-|---|---|
-| `contract_id`, `symbol`, `currency`, `minimum_size`, `size_increment` | IBKR contract details. European ETFs trade in fractions (minimum 0.0001 shares) |
-| `isin` | IBKR's `secIdList` |
-| `name` | IBKR's long name, abbreviated (`VANG FTSE AW USDA`) |
-| `exchange` | IBKR's primary exchange (`IBIS`, `IBIS2`, `AEB`, `SBF`, …) |
-| `legal_entity` | The fund from the [LEI resolver](lei_resolver.md#get_legal_entity_by_isin). An ETF's LEI belongs to the fund itself, so this gives its full registered name (`Vanguard FTSE All-World UCITS ETF`) |
-
-A 50-ETF scan with fund lookups took about 45 seconds.
-
-### `quote_etfs`
-```python
-async def quote_etfs(client_: IB, etfs: List[Etf]) -> List[Etf]
-```
-Returns the same ETFs with `quote` filled in as an [`EtfQuote`](#etfquote), by the same rules as
-[`quote_bonds`](#quote_bonds).
-
-## ETF data structures
-
-### `EtfFilters`
-```python
-class EtfFilters(TypedDict, total=False):
-    stkTypes: str
-    avgUsdVolumeAbove: Any
-    avgUsdVolumeBelow: Any
-    usdPriceAbove: Any
-    usdPriceBelow: Any
-    histPerfRatioYTDAbove: Any
-    histPerfRatio1yAbove: Any
-    histPerfRatio3yAbove: Any
-    histPerfRatio5yAbove: Any
-    dividendYieldFrdAbove: Any
-    dividendYieldFrdBelow: Any
-    firstTradeDateBelow: str
-    issuerCountryIs: str
-    peaEligibleStkIs: Any
-```
-The typed subset of filter tags that work for European ETFs. The full list is in the
-[ETF tutorial](../research/etf-scanning-europe.md#4-filters).
-
-### `EtfQuote`
-```python
-@dataclass(frozen=True)
-class EtfQuote:
-    price: Decimal
-    as_of: datetime
-    live: bool
-```
-Like [`BondQuote`](#bondquote), but `price` is per share in the ETF's trading currency.
-
-### `Etf`
-```python
-@dataclass(frozen=True)
-class Etf:
-    contract_id: int
-    symbol: str
-    isin: Optional[str]
-    name: str
-    currency: str
-    exchange: str
-    minimum_size: Decimal = Decimal(1)
-    size_increment: Decimal = Decimal(1)
-    legal_entity: Optional[LegalEntity] = None
-    quote: Optional[EtfQuote] = None
-```
-One ETF listing and, optionally, its latest quote. The same fund can be listed on several exchanges and in several
-currencies; each listing has its own `contract_id` but the same `isin`. IBKR's scanner returns no expense ratio, fund
-size or distribution policy for European ETFs; see the [tutorial](../research/etf-scanning-europe.md).
-
-## Printing ETFs
-
-ETF prices are money, so unlike bond prices they are formatted with a currency symbol (`€171.18`).
-
-### `print_etf`
-```python
-def print_etf(etf: Etf) -> None
-```
-Titled with the symbol and exchange (`VWCE (IBIS2)`). A two-column sheet in groups:
-1. Name, symbol, ISIN, IBKR contract ID, exchange, currency.
-2. Fund (legal name), LEI, fund country, LEI status, from `legal_entity`.
-3. Minimum size, size increment.
-4. Price source (Live / Close), quote received.
-5. Price.
-
-### `print_etfs`
-```python
-def print_etfs(etfs: List[Etf]) -> None
-```
-A [`print_etf`](#print_etf) sheet for each ETF, separated by a blank line.
-
-### `print_etfs_table`
-```python
-def print_etfs_table(etfs: List[Etf], *, title: str = "ETFS") -> None
-```
-One row per ETF, titled with the instrument count like [`print_bonds_table`](#print_bonds_table). Columns: Contract ID,
-Symbol, Name, Fund (legal name from `legal_entity`), ISIN, Exchange, Price (with currency symbol, via Babel), Source
-(Live / Close).
-
-# Examples
+## Example
 
 ```python
 from clients.interactive_brokers.client import connect, disconnect
@@ -321,13 +204,4 @@ try:
   print_bond(quoted[0])
 finally:
   disconnect(ib)
-```
-
-```python
-from clients.interactive_brokers.scanners.exchange_traded_fund import interactive_brokers_scan_etfs, quote_etfs
-from clients.interactive_brokers.scanners.printing import print_etfs_table
-
-etfs = await interactive_brokers_scan_etfs(ib, instrument="STOCK.EU", location="STK.EU.IBIS-ETF",
-                                           scan_code="MOST_ACTIVE_AVG_USD")
-print_etfs_table(await quote_etfs(ib, etfs), title="MOST TRADED ETFS ON XETRA")
 ```

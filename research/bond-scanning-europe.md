@@ -6,7 +6,7 @@ below comes from IBKR's scanner parameters XML, returned by `ib.reqScannerParame
 copy and check the codes against it.
 
 The functions used here (`interactive_brokers_scan_bonds`, `quote_bonds`, `print_bonds_table`, …) are documented in
-[Scanners](../documentation/scanners.md#bonds). For ETFs, see the [ETF scanning tutorial](etf-scanning-europe.md).
+[Scanners](../documentation/scanners.md).
 
 ---
 

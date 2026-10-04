@@ -45,6 +45,7 @@ async def _main() -> None:
         print_bonds_table(quoted_corporate_, title="EUR INVESTMENT-GRADE CORPORATES, 2-5 YEARS")
         print()
         print_bonds(quoted_corporate_[:4])
+
     finally:
         disconnect(ib)
 
