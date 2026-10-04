@@ -6,7 +6,7 @@ below comes from IBKR's scanner parameters XML, returned by `ib.reqScannerParame
 copy and check the codes against it.
 
 The functions used here (`interactive_brokers_scan_bonds`, `quote_bonds`, `print_bonds_table`, …) are documented in
-[Bond scanner](../documentation/scanner.md).
+[Scanners](../documentation/scanners.md#bonds). For ETFs, see the [ETF scanning tutorial](etf-scanning-europe.md).
 
 ---
 
@@ -182,11 +182,11 @@ The `issuerCountryIs` values for Europe, taken from the XML:
 
 ## 6. Running a scan
 
-`interactive_brokers_scan_bonds` lives in `clients/interactive_brokers/scanner/fixed_income.py`:
+`interactive_brokers_scan_bonds` lives in `clients/interactive_brokers/scanners/fixed_income.py`:
 
 ```python
 from clients.interactive_brokers.client import connect, disconnect
-from clients.interactive_brokers.scanner.fixed_income import interactive_brokers_scan_bonds
+from clients.interactive_brokers.scanners.fixed_income import interactive_brokers_scan_bonds
 
 ib = await connect()
 try:
@@ -201,7 +201,7 @@ Pass any filter from section 4 as a keyword argument; values are converted to st
 `BondFilters` still work but are flagged by type checkers.
 
 `interactive_brokers_scan_bonds` returns a list of `Bond` objects with ISIN, coupon, maturity and the other details. Section 8 shows how to
-add prices and yields; [Bond scanner](../documentation/scanner.md#interactive_brokers_scan_bonds) explains where each field comes from.
+add prices and yields; [Scanners](../documentation/scanners.md#interactive_brokers_scan_bonds) explains where each field comes from.
 
 ---
 
@@ -357,8 +357,8 @@ await interactive_brokers_scan_bonds(
 show them with their yields:
 
 ```python
-from clients.interactive_brokers.scanner.fixed_income import quote_bonds
-from clients.interactive_brokers.scanner.printing import print_bond, print_bonds_table
+from clients.interactive_brokers.scanners.fixed_income import quote_bonds
+from clients.interactive_brokers.scanners.printing import print_bond, print_bonds_table
 
 quoted = await quote_bonds(ib, bonds)
 print_bonds_table(quoted, title="GERMAN GOVERNMENT BONDS")
@@ -370,12 +370,12 @@ bond.yield_to_maturity()  # 3.21 (%)
 bond.yield_without_reinvestment()  # 3.04 (%), coupons kept as cash
 ```
 
-The price is live when the market is open and the previous close otherwise (`quote.live` is `False`). Without any
-price, `quote` and every yield are `None`. Live euro bond prices need a European bond market-data subscription.
+Prices are requested as delayed-frozen data: real-time where you subscribe, otherwise delayed or the last close
+(`quote.live` is `False`). Without any price, `quote` and every yield are `None`.
 
 Coupons are treated as annual, because IBKR does not report the payment frequency. That is right for German and most
 other euro government bonds; for semi-annual payers (Italian BTPs, UK gilts, most USD bonds) the computed yield is
-slightly off. The full calculation rules are in [Bond scanner](../documentation/scanner.md#methods).
+slightly off. The full calculation rules are in [Scanners](../documentation/scanners.md#methods).
 
 ---
 

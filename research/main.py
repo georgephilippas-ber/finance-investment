@@ -5,8 +5,8 @@ from datetime import date
 from dotenv import load_dotenv
 
 from clients.interactive_brokers.client import connect, disconnect, print_full_account_information
-from clients.interactive_brokers.scanner.fixed_income import quote_bonds, interactive_brokers_scan_bonds
-from clients.interactive_brokers.scanner.printing import print_bonds_table, print_bond, print_bonds
+from clients.interactive_brokers.scanners.fixed_income import quote_bonds, interactive_brokers_scan_bonds
+from clients.interactive_brokers.scanners.printing import print_bonds_table, print_bond, print_bonds
 
 
 def _maturity_date_in_years(years: int) -> str:
@@ -23,7 +23,9 @@ async def _main() -> None:
 
         await print_full_account_information(ib)
 
-        bonds_corporate_ = await interactive_brokers_scan_bonds(ib, instrument="BOND", location="BOND.EU.EURONEXT",
+        bonds_corporate_ = await interactive_brokers_scan_bonds(ib,
+                                                                instrument="BOND",
+                                                                location="BOND.EU.EURONEXT",
                                                                 scan_code="HIGH_BOND_ASK_YIELD_ALL",
                                                                 currencyLike='EUR',
                                                                 bondCreditRating='highGrade',
@@ -35,7 +37,7 @@ async def _main() -> None:
                                                                 bondDefaultedIs='false',
                                                                 bondAmtOutstandingAbove=100,
                                                                 bondInitialSizeAbove=1,
-                                                                bondInitialSizeBelow=10,
+                                                                bondInitialSizeBelow=1000,
                                                                 )
 
         quoted_corporate_ = await quote_bonds(ib, bonds_corporate_)
@@ -43,8 +45,6 @@ async def _main() -> None:
         print_bonds_table(quoted_corporate_, title="EUR INVESTMENT-GRADE CORPORATES, 2-5 YEARS")
         print()
         print_bonds(quoted_corporate_[:4])
-
-
     finally:
         disconnect(ib)
 

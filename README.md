@@ -13,12 +13,13 @@ their yields.
 | [EODHD client](documentation/eodhd.md)                             | Exchanges database, security lookup by ticker / ISIN / exchange, latest end-of-day price.                                 |
 | [Exchanges](documentation/exchanges.md)                            | Exchanges database with IBKR codes: get and print.                                                                        |
 | [Mappings](documentation/mappings.md)                              | `SecurityInformationMapping`: converting between IBKR and EODHD, and what it relies on (ISIN, exchange mapping, currency). |
-| [Domain](documentation/domain.md)                                  | Public data structures: `Provider`, `SecurityInformation`, `EndOfDayPrice`, `AccountInformation`, `PortfolioPosition`, `Lot`, and an index of the bond types. |
+| [Domain](documentation/domain.md)                                  | Public data structures: `Provider`, `SecurityInformation`, `EndOfDayPrice`, `AccountInformation`, `PortfolioPosition`, `Lot`, and an index of the bond and ETF types. |
 | [Printing](documentation/printing.md)                              | `print_table`, `print_section`, `print_subsection`.                                                                       |
-| [Bond scanner](documentation/scanner.md)                           | `interactive_brokers_scan_bonds`, `quote_bonds`, `Bond` (dirty price, yield to maturity, yield without reinvestment), `print_bond(s)`.        |
+| [Scanners](documentation/scanners.md)                              | Bonds: `interactive_brokers_scan_bonds`, `quote_bonds`, `Bond` (dirty price, yields), printing. ETFs: `interactive_brokers_scan_etfs`, `quote_etfs`, `Etf`, printing. |
 | [LEI resolver](documentation/lei_resolver.md)                      | `get_legal_entity_by_isin`: the issuer (LEI, legal name) of a security by ISIN, via ESMA FIRDS and GLEIF.                |
 | [Helpers](documentation/helpers.md)                                | `latest_weekday`.                                                                                                         |
 | [Bond scanning tutorial](research/bond-scanning-europe.md)         | IBKR scanner codes, filter tags and ready-made queries for European government and corporate bonds.                      |
+| [ETF scanning tutorial](research/etf-scanning-europe.md)           | Scanning European (UCITS) ETFs on IBKR: locations, filters, sort orders and tested queries.                               |
 
 ## Layout
 
@@ -33,11 +34,13 @@ clients/
     configuration.py      connection settings and tracker key (from the environment)
     domain.py             account and position types
     position_tracker.py   PositionTracker, Lot
-    scanner/              bond scanning
+    scanners/             bond and ETF scanning
       __init__.py         hides IBKR's harmless scanner-cancelled message
       fixed_income.py     interactive_brokers_scan_bonds, quote_bonds
-      domain.py           Bond, BondQuote, BondFilters
-      printing.py         print_bond, print_bonds, print_bonds_table
+      exchange_traded_fund.py  interactive_brokers_scan_etfs, quote_etfs
+      domain.py           Bond, BondQuote, BondFilters, Etf, EtfQuote, EtfFilters
+      printing.py         print_bond(s), print_bonds_table, print_etf(s), print_etfs_table
+      _shared.py          internal: scans, contract details, issuer lookup, prices
   eodhd/                  EODHD client, configuration, internal symbol type
   lei_resolver/           issuer LEI and legal name by ISIN (ESMA FIRDS, GLEIF)
 printing/                 print_table, print_section, print_subsection
@@ -49,9 +52,10 @@ cache/eodhd/              cached EODHD responses
 documentation/            these pages and examples/main_features.py
 main.py                   prints the IBKR account summary and positions
 research/
-  main.py                 prints the account summary and positions, then scans and prints EUR corporate bonds
+  main.py                 prints the account summary and positions, then scans and prints EUR corporate bonds and the most traded Xetra ETFs
   configuration.py        file name for a dump of IBKR's scanner parameters
   bond-scanning-europe.md bond scanning tutorial
+  etf-scanning-europe.md  ETF scanning tutorial
 ```
 
 ## Setup

@@ -100,8 +100,12 @@ def print_bonds_table(bonds: List[Bond], valuation_date: Optional[date] = None, 
         ]
         for bond_ in shown_
     ]
-    total_ = f"{'> ' if len(bonds) == SCANNER_ROW_LIMIT else ''}{len(bonds)}"
-    noun_ = "instrument" if len(bonds) == 1 else "instruments"
-    count_ = f"{len(shown_)} of {total_} {noun_}" if has_lei else f"{total_} {noun_}"
+    count_ = _instrument_count(len(shown_), len(bonds), has_lei)
     print_table(headers_, rows_, first_right_aligned_column=4, title=f"{title} ({count_})")
     print(f"({len(rows_)} {'row' if len(rows_) == 1 else 'rows'})")
+
+
+def _instrument_count(shown: int, total: int, filtered: bool) -> str:
+    total_ = f"{'> ' if total == SCANNER_ROW_LIMIT else ''}{total}"
+    noun_ = "instrument" if total == 1 else "instruments"
+    return f"{shown} of {total_} {noun_}" if filtered else f"{total_} {noun_}"

@@ -10,9 +10,12 @@ Data structures that public functions take or return. All are dataclasses except
 | `AccountInformation` | `clients/interactive_brokers/domain.py` | `get_account_information` | `print_account_information` |
 | `PortfolioPosition` | `clients/interactive_brokers/domain.py` | `get_positions` | `print_positions` |
 | `Lot` | `clients/interactive_brokers/position_tracker.py` | `PositionTracker.by_contract_id` | — |
-| `Bond` | `clients/interactive_brokers/scanner/domain.py` | `interactive_brokers_scan_bonds`, `quote_bonds` | `quote_bonds`, `print_bond`, `print_bonds_table` |
-| `BondQuote` | `clients/interactive_brokers/scanner/domain.py` | inside `Bond.quote` | — |
-| `BondFilters` | `clients/interactive_brokers/scanner/domain.py` | — | `interactive_brokers_scan_bonds` |
+| `Bond` | `clients/interactive_brokers/scanners/domain.py` | `interactive_brokers_scan_bonds`, `quote_bonds` | `quote_bonds`, `print_bond`, `print_bonds_table` |
+| `BondQuote` | `clients/interactive_brokers/scanners/domain.py` | inside `Bond.quote` | — |
+| `BondFilters` | `clients/interactive_brokers/scanners/domain.py` | — | `interactive_brokers_scan_bonds` |
+| `Etf` | `clients/interactive_brokers/scanners/domain.py` | `interactive_brokers_scan_etfs`, `quote_etfs` | `quote_etfs`, `print_etf`, `print_etfs`, `print_etfs_table` |
+| `EtfQuote` | `clients/interactive_brokers/scanners/domain.py` | inside `Etf.quote` | — |
+| `EtfFilters` | `clients/interactive_brokers/scanners/domain.py` | — | `interactive_brokers_scan_etfs` |
 
 ## Common
 
@@ -153,11 +156,12 @@ and quantity. Same-day purchases share one entry whose quantity must be supplied
 that total rather than incrementing it. A position recorded on several days has several lots; `get_positions`
 derives `opened` and the annualized estimate from them. No purchase cost or account ID is stored.
 
-## Bond scanner
+## Scanners
 
-`Bond`, `BondQuote` and `BondFilters` are documented with the functions that use them, in
-[Bond scanner](scanner.md#data-structures). Like `Lot`, `Bond` and `BondQuote` are frozen. Bond prices are per 100 of
-face value rather than amounts of money.
+`Bond`, `BondQuote`, `BondFilters`, `Etf`, `EtfQuote` and `EtfFilters` are documented with the functions that use
+them, in [Scanners](scanners.md): [bond types](scanners.md#data-structures) and
+[ETF types](scanners.md#etf-data-structures). Like `Lot`, they are frozen. Bond prices are per 100 of face value
+rather than amounts of money; ETF prices are per share.
 
 ## Internal
 
