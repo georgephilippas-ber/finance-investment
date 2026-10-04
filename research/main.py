@@ -28,14 +28,30 @@ async def _main() -> None:
 
         await print_full_account_information(ib)
 
-        bonds_ = await scan_bonds(ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.NON-US",
-                                  scan_code="HIGH_BOND_ASK_YIELD_ALL",
-                                  issuerCountryIs='DE',
-                                  currencyLike='EUR',
-                                  maturityDateAbove=_maturity_date_in_years(2),
-                                  maturityDateBelow=_maturity_date_in_years(5))
+        # bonds_government_ = await scan_bonds(ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.NON-US",
+        #                                      scan_code="HIGH_BOND_ASK_YIELD_ALL",
+        #                                      issuerCountryIs='DE',
+        #                                      currencyLike='EUR',
+        #                                      maturityDateAbove=_maturity_date_in_years(2),
+        #                                      maturityDateBelow=_maturity_date_in_years(5))
+        #
+        # for bond_ in await quote_bonds(ib, bonds_government_[:3]):
+        #     print()
+        #     print_bond(bond_)
 
-        for bond_ in await quote_bonds(ib, bonds_[:3]):
+        bonds_corporate_ = await scan_bonds(ib, instrument="BOND", location="BOND.WW",
+                                            scan_code="HIGH_BOND_ASK_YIELD_ALL",
+                                            currencyLike='EUR',
+                                            bondCreditRating='highGrade',
+                                            maturityDateAbove=_maturity_date_in_years(2),
+                                            maturityDateBelow=_maturity_date_in_years(5),
+                                            bondCallableIs='false',
+                                            excludeConvertible='true',
+                                            bondVarCouponRateIs='false',
+                                            bondDefaultedIs='false',
+                                            bondAmtOutstandingAbove=500)
+
+        for bond_ in await quote_bonds(ib, bonds_corporate_[:3]):
             print()
             print_bond(bond_)
 

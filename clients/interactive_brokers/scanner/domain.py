@@ -18,6 +18,11 @@ class BondFilters(TypedDict, total=False):
     bondVarCouponRateIs: Any
     issuerCountryIs: str
     currencyLike: str
+    bondCreditRating: str  # "highGrade" or "highYield"
+    bondCallableIs: Any
+    bondDefaultedIs: Any
+    excludeConvertible: Any
+    bondAmtOutstandingAbove: Any  # millions of face value
 
 
 def _add_months(day: date, months: int) -> date:
