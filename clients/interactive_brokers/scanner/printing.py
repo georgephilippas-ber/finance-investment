@@ -12,7 +12,7 @@ if __package__:
 else:
     from domain import Bond
 
-__all__ = ["print_bond"]
+__all__ = ["print_bond", "print_bonds"]
 
 
 def _coupon(bond: Bond) -> str:
@@ -47,12 +47,15 @@ def print_bond(bond: Bond, valuation_date: Optional[date] = None) -> None:
         ["Issuer", bond.issuer or "-"],
         ["Currency", bond.currency or "-"],
         ["Coupon", _coupon(bond)],
-        ["Payment frequency", "Annual (assumed)"],
-        ["Maturity", bond.maturity.isoformat()],
         ["Years to maturity", format(bond.years_to_maturity(valuation_date_), ".2f")],
+        ["Yield to maturity (real)" if bond.inflation_linked else "Yield to maturity",
+         _yield(bond.yield_to_maturity(valuation_date_))],
+        ["Yield, no reinvestment (real)" if bond.inflation_linked else "Yield, no reinvestment",
+         _yield(bond.yield_without_reinvestment(valuation_date_))],
+        ["Maturity", bond.maturity.isoformat()],
+        ["Payment frequency", "Annual (assumed)"],
         ["Inflation-linked", "Yes" if bond.inflation_linked else "No"],
         ["Callable", "Yes" if bond.callable else "No"],
-        ["Rating", bond.rating or "-"],
         ["Minimum size", format(bond.minimum_size, ",f")],
         ["Size increment", format(bond.size_increment, ",f")],
         ["Price source", _source(bond)],
@@ -61,10 +64,27 @@ def print_bond(bond: Bond, valuation_date: Optional[date] = None) -> None:
         ["Clean price", _price(clean_price_)],
         ["Accrued interest", _price(dirty_price_ - clean_price_ if dirty_price_ is not None else None)],
         ["Dirty price", _price(dirty_price_)],
-        ["Yield to maturity (real)" if bond.inflation_linked else "Yield to maturity",
-         _yield(bond.yield_to_maturity(valuation_date_))],
-        ["Yield, no reinvestment (real)" if bond.inflation_linked else "Yield, no reinvestment",
-         _yield(bond.yield_without_reinvestment(valuation_date_))],
     ]
-    print_table(["Field", "Value"], rows_, first_right_aligned_column=1, separators_after=(5, 12, 14, 17),
+    print_table(["Field", "Value"], rows_, first_right_aligned_column=1, separators_after=(5, 10, 13, 15, 18),
                 title=bond.description)
+
+
+def print_bonds(bonds: List[Bond], valuation_date: Optional[date] = None, *, title: str = "BONDS") -> None:
+    valuation_date_ = valuation_date or latest_weekday()
+    headers_: List[str] = ["Contract ID", "Name", "ISIN", "Clean price", "Coupon", "Years to maturity",
+                           "Yield to maturity", "Yield, no reinvestment"]
+    rows_: List[List[str]] = [
+        [
+            str(bond_.contract_id),
+            bond_.description,
+            bond_.isin or "-",
+            _price(bond_.quote.price if bond_.quote is not None else None),
+            _coupon(bond_),
+            format(bond_.years_to_maturity(valuation_date_), ".2f"),
+            _yield(bond_.yield_to_maturity(valuation_date_)),
+            _yield(bond_.yield_without_reinvestment(valuation_date_)),
+        ]
+        for bond_ in bonds
+    ]
+    print_table(headers_, rows_, first_right_aligned_column=3, title=title)
+    print(f"({len(rows_)} {'row' if len(rows_) == 1 else 'rows'})")

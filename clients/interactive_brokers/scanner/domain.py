@@ -50,7 +50,6 @@ class Bond:
     issuer: Optional[str] = None
     inflation_linked: bool = False
     callable: bool = False
-    rating: Optional[str] = None
     minimum_size: Decimal = Decimal(1)
     size_increment: Decimal = Decimal(1)
     quote: Optional[BondQuote] = None

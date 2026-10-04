@@ -48,7 +48,6 @@ def _to_bond(details: ContractDetails, currency: Optional[str]) -> Bond:
         issuer=details.longName or None,
         inflation_linked=details.evRule.startswith("factor"),  # index-ratio factor, e.g. DBRI
         callable=details.callable,
-        rating=details.ratings or None,
         minimum_size=Decimal(str(details.minSize)),
         size_increment=Decimal(str(details.sizeIncrement)),
     )

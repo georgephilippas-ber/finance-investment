@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 from clients.interactive_brokers.client import connect, disconnect, print_full_account_information
 from clients.interactive_brokers.scanner.fixed_income import quote_bonds, scan_bonds
-from clients.interactive_brokers.scanner.printing import print_bond
+from clients.interactive_brokers.scanner.printing import print_bond, print_bonds
 from research.configuration import SCANNER_REFERENCE_FILENAME
 
 
@@ -39,7 +39,7 @@ async def _main() -> None:
         #     print()
         #     print_bond(bond_)
 
-        bonds_corporate_ = await scan_bonds(ib, instrument="BOND", location="BOND.WW",
+        bonds_corporate_ = await scan_bonds(ib, instrument="BOND", location="BOND.EU.EURONEXT",
                                             scan_code="HIGH_BOND_ASK_YIELD_ALL",
                                             currencyLike='EUR',
                                             bondCreditRating='highGrade',
@@ -51,9 +51,13 @@ async def _main() -> None:
                                             bondDefaultedIs='false',
                                             bondAmtOutstandingAbove=500)
 
-        for bond_ in await quote_bonds(ib, bonds_corporate_[:3]):
-            print()
-            print_bond(bond_)
+        quoted_corporate_ = await quote_bonds(ib, bonds_corporate_)
+        print()
+        print_bonds(quoted_corporate_, title="EUR INVESTMENT-GRADE CORPORATES, 2-5 YEARS")
+
+        # for bond_ in quoted_corporate_[:3]:
+        #     print()
+        #     print_bond(bond_)
 
     finally:
         disconnect(ib)
