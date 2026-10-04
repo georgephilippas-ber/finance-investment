@@ -178,20 +178,21 @@ The `issuerCountryIs` values for Europe, taken from the XML:
 
 ## 6. The helper
 
+`scan_bonds` lives in `clients/interactive_brokers/scanner.py`:
+
 ```python
-from ib_async import IB, ScannerSubscription, TagValue
+from clients.interactive_brokers.client import connect, disconnect
+from clients.interactive_brokers.scanner import scan_bonds
 
-
-async def scan_bonds(ib: IB, instrument: str, location: str, scan_code: str, rows: int = 50, **filters) -> list:
-    subscription = ScannerSubscription(
-        instrument=instrument,
-        locationCode=location,
-        scanCode=scan_code,
-        numberOfRows=rows,
-    )
-    tags = [TagValue(name, str(value)) for name, value in filters.items()]
-    return await ib.reqScannerDataAsync(subscription, scannerSubscriptionFilterOptions=tags)
+ib = await connect()
+try:
+    results = await scan_bonds(ib, "BOND.GOVT.NON-US", "BOND.GOVT.NON-US", "HIGH_BOND_ASK_YIELD_ALL",
+                               issuerCountryIs="DE", currencyLike="EUR")
+finally:
+    disconnect(ib)
 ```
+
+Pass any filter from section 4 as a keyword argument. Values are converted to strings for you.
 
 Each result is a `ScanData` with `.rank` and `.contractDetails.contract`. The contract usually has only basic fields
 filled in. Section 8 shows how to get the full bond details.
