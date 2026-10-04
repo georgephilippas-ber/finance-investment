@@ -1,14 +1,12 @@
 from asyncio import run
 from calendar import monthrange
 from datetime import date
-from pathlib import Path
 
 from dotenv import load_dotenv
 
 from clients.interactive_brokers.client import connect, disconnect, print_full_account_information
 from clients.interactive_brokers.scanner.fixed_income import quote_bonds, scan_bonds
-from clients.interactive_brokers.scanner.printing import print_bond, print_bonds
-from research.configuration import SCANNER_REFERENCE_FILENAME
+from clients.interactive_brokers.scanner.printing import print_bonds
 
 
 def _maturity_date_in_years(years: int) -> str:
