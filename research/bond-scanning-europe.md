@@ -101,7 +101,8 @@ The XML also has the other Refinitiv balance-sheet ratio scans and the individua
 
 ## 4. Filters
 
-Most numeric filters come in pairs, `...Above` and `...Below`. Pass them as strings.
+Most numeric filters come in pairs, `...Above` and `...Below`. Pass yes/no filters as Python booleans (`True` /
+`False`); they are sent to IBKR as its lowercase `true` / `false`.
 
 ### Available for both corporates and sovereigns
 
@@ -109,7 +110,7 @@ Most numeric filters come in pairs, `...Above` and `...Below`. Pass them as stri
 |-----------------------------------------------|----------------------------------------------------------------|
 | `currencyLike`                                | `EUR`, `GBP`, `CHF`, `USD`, `CAD`, `AUD`, `BRL`, `HKD`         |
 | `issuerCountryIs`                             | ISO 2-letter code (see section 5)                              |
-| `maturityDateAbove` / `Below`                 | `yyyymmdd` only (IBKR rejects `mm/yyyy` and years)             |
+| `maturityYearsAbove` / `Below`                | Whole years from today; converted to IBKR's maturity dates     |
 | `couponRateAbove` / `Below`                   | Coupon in %                                                    |
 | `bondAskYieldAbove` / `Below`                 | Yield at the ask, in %                                         |
 | `bondBidYieldAbove` / `Below`                 | Yield at the bid, in %                                         |
@@ -141,7 +142,7 @@ Most numeric filters come in pairs, `...Above` and `...Below`. Pass them as stri
 | `ratingsRelation`                       | How Moody's and S&P filters combine: `or`, `and`, `xand`                         |
 | `bondIssuerLike`                        | Issuer name, partial match (e.g. `Siemens`)                                      |
 | `bondStkSymbolIs`                       | Ticker of the issuer's stock (e.g. `SAP`)                                        |
-| `bondCallableIs`                        | `true` only / `false` exclude                                                    |
+| `bondCallableIs`                        | A required parameter of `interactive_brokers_scan_bonds`: `False` or `True`      |
 | `bondNextCallDateAbove` / `Below`       | Call protection: a date, presumably `yyyymmdd` like maturity (untested)          |
 | `bondPaymentFreqIs`                     | `1` annual, `2` semi-annual, `4` quarterly, `12` monthly, `0` at maturity        |
 | `bondDefaultedIs`                       | `false` to exclude defaulted bonds                                               |
@@ -191,7 +192,9 @@ ib = await connect()
 try:
   bonds = await interactive_brokers_scan_bonds(ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.NON-US",
                                                scan_code="HIGH_BOND_ASK_YIELD_ALL", issuerCountryIs="DE",
-                                               currencyLike="EUR")
+                                               currencyLike="EUR",
+                                               bondCallableIs=False,
+)
 finally:
   disconnect(ib)
 ```
@@ -213,9 +216,10 @@ await interactive_brokers_scan_bonds(
     ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.NON-US", scan_code="HIGH_BOND_ASK_YIELD_ALL",
     issuerCountryIs="DE",
     currencyLike="EUR",
-    maturityDateAbove="20281002",   # 2 years from 2 Oct 2026
-    maturityDateBelow="20361002",   # 10 years
-    bondVarCouponRateIs="false",
+    maturityYearsAbove=2,
+    maturityYearsBelow=10,
+    bondVarCouponRateIs=False,
+    bondCallableIs=False,
 )
 ```
 
@@ -229,8 +233,9 @@ for country in ["IT", "ES", "PT", "GR"]:
         issuerCountryIs=country,
         currencyLike="EUR",
         bondAskYieldAbove=3,
-        maturityDateBelow="20331002",   # 7 years
-    )
+        maturityYearsBelow=7,
+        bondCallableIs=False,
+)
 ```
 
 ### 7.3 Short-dated core-euro govts (cash-like ladder)
@@ -240,8 +245,9 @@ await interactive_brokers_scan_bonds(
     ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.NON-US", scan_code="NEAR_MATURITY_DATE",
     issuerCountryIs="NL",
     currencyLike="EUR",
-    maturityDateBelow="20271231",
-    bondAmtOutstandingAbove=5_000,   # >= EUR 5bn outstanding, i.e. liquid lines
+    maturityYearsBelow=1,
+    bondAmtOutstandingAbove=5_000,   # >= EUR 5bn outstanding, i.e. liquid lines,
+    bondCallableIs=False,
 )
 ```
 
@@ -252,12 +258,12 @@ await interactive_brokers_scan_bonds(
     ib, instrument="BOND", location="BOND.WW", scan_code="HIGH_BOND_ASK_YIELD_ALL",
     currencyLike="EUR",
     bondCreditRating="highGrade",
-    maturityDateAbove="20291002",   # 3 years
-    maturityDateBelow="20331002",   # 7 years
-    bondCallableIs="false",
-    excludeConvertible="true",
-    bondVarCouponRateIs="false",
-    bondDefaultedIs="false",
+    maturityYearsAbove=3,
+    maturityYearsBelow=7,
+    bondCallableIs=False,
+    excludeConvertible=True,
+    bondVarCouponRateIs=False,
+    bondDefaultedIs=False,
     bondAmtOutstandingAbove=500,     # >= EUR 500m issue size
 )
 ```
@@ -272,6 +278,7 @@ await interactive_brokers_scan_bonds(
     spRatingAbove="A-",
     moodyRatingAbove="A3",
     ratingsRelation="and",
+    bondCallableIs=False,
 )
 ```
 
@@ -289,9 +296,9 @@ await interactive_brokers_scan_bonds(
     bondAskYieldAbove=5,
     bondAskYieldBelow=10,            # very high yields usually mean distress
     bondDurationBelow=4,
-    bondDefaultedIs="false",
-    bondTradingFlatIs="false",
-    bondCallableIs="false",
+    bondDefaultedIs=False,
+    bondTradingFlatIs=False,
+    bondCallableIs=True,             # nearly all euro high-yield bonds are callable
 )
 ```
 
@@ -304,7 +311,8 @@ await interactive_brokers_scan_bonds(
     ib, instrument="BOND", location="BOND.WW", scan_code="HIGH_BOND_ASK_YIELD_ALL",
     currencyLike="EUR",
     bondCreditRating="highGrade",
-    bondInitialSizeBelow=100,        # minimum order below 100 units
+    bondInitialSizeBelow=100,        # minimum order below 100 units,
+    bondCallableIs=False,
 )
 ```
 
@@ -319,6 +327,7 @@ await interactive_brokers_scan_bonds(
     ib, instrument="BOND", location="BOND.WW", scan_code="FAR_MATURITY_DATE",
     bondIssuerLike="Volkswagen",
     currencyLike="EUR",
+    bondCallableIs=False,
 )
 ```
 
@@ -326,14 +335,15 @@ await interactive_brokers_scan_bonds(
 
 ```python
 # Sovereigns: yield filters are available here
-await interactive_brokers_scan_bonds(ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.EU.EBS", scan_code="HIGH_BOND_ASK_YIELD_ALL", currencyLike="CHF")
+await interactive_brokers_scan_bonds(ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.EU.EBS", scan_code="HIGH_BOND_ASK_YIELD_ALL", currencyLike="CHF", bondCallableIs=False)
 
 # Corporates: SIX corporate data is price-only, so filter and sort on price
 await interactive_brokers_scan_bonds(
     ib, instrument="BOND", location="BOND.EU.EBS", scan_code="HIGH_COUPON_RATE",
     currencyLike="CHF",
     bondAskBelow=100,                # trading below par
-    maturityDateBelow="20311002",   # 5 years
+    maturityYearsBelow=5,
+    bondCallableIs=False,
 )
 ```
 
@@ -345,6 +355,7 @@ await interactive_brokers_scan_bonds(
     currencyLike="EUR",
     bondCreditRating="highGrade",
     esgEmissionsScoreAbove=70,
+    bondCallableIs=False,
 )
 ```
 

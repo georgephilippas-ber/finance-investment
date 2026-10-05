@@ -120,10 +120,12 @@ class PortfolioPosition:
     opened: Optional[date]
     unrealized_annualized_return: Optional[Decimal]
     contract_id: int
+    isin: Optional[str] = None
 ```
 One open position.
 - `symbol`, `exchange`, `currency`, `trading_class`, `contract_id` — the IBKR contract; `exchange` is the primary
   exchange, falling back to the contract's exchange when the primary exchange is empty.
+- `isin` — from IBKR's contract details; `None` when it cannot be resolved. Filled by `get_positions`.
 - `quantity` — IBKR's position quantity (shares for stocks/ETFs); negative for a short.
 - `average_cost` — IBKR's `averageCost`, converted to `Decimal`; `total_cost` = signed `quantity` × `average_cost`.
 - `market_price`, `market_value` — IBKR's valuation price and value (not necessarily the official close).

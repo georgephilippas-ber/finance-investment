@@ -25,13 +25,19 @@ prints them. Scan codes, filter tags and ready-made European queries are in the
 
 ### `interactive_brokers_scan_bonds`
 ```python
-async def interactive_brokers_scan_bonds(client_: IB, *, instrument: str, location: str, scan_code: str, rows: int = SCANNER_ROW_LIMIT, **filters: Unpack[BondFilters]) -> List[Bond]
+async def interactive_brokers_scan_bonds(client_: IB, *, instrument: str, location: str, scan_code: str, bondCallableIs: bool, rows: int = SCANNER_ROW_LIMIT, **filters: Unpack[BondFilters]) -> List[Bond]
 ```
 Runs one IBKR scan and returns the matching bonds as [`Bond`](#bond)s, without quotes.
 - `instrument`, `location`, `scan_code` — IBKR scanner codes, e.g. `"BOND.GOVT.NON-US"`, `"BOND.GOVT.NON-US"`,
   `"HIGH_BOND_ASK_YIELD_ALL"`. The scan code sets the order; the filters do the narrowing.
 - `rows` — at most `SCANNER_ROW_LIMIT` (50), IBKR's cap per scan. A full 50 usually means more bonds matched.
-- `filters` — IBKR filter tags as keyword arguments, sent as strings (`issuerCountryIs="DE"`, `bondCallableIs="false"`).
+- `bondCallableIs` — required, and always sent to IBKR: `False` returns only bonds the issuer cannot repay early, `True`
+  only callable ones. Omitting it raises `TypeError`. Government bonds are not callable: `False` returns them all,
+  `True` none. To cover both, run two scans. Euro high-yield bonds are nearly all callable, so a high-yield scan
+  with `False` returns nothing.
+- `filters` — IBKR filter tags as keyword arguments (`issuerCountryIs="DE"`, `bondDefaultedIs=False`). Values are sent to
+  IBKR as text after one conversion step: booleans become IBKR's lowercase `true` / `false`, `date`s become
+  `YYYYMMDD`, and numbers are written out as they are. So pass `True`, `100` or `date(2029, 1, 1)`, not their text.
   Tags missing from [`BondFilters`](#bondfilters) still work at runtime but are flagged by type checkers.
 
 One contract-details request is made per result, concurrently. IBKR leaves most bond fields empty, so each
@@ -39,9 +45,10 @@ One contract-details request is made per result, concurrently. IBKR leaves most 
 
 | Field | Source |
 |---|---|
-| `contract_id`, `isin`, `description`, `bond_type`, `callable`, `minimum_size`, `size_increment` | IBKR contract details (`conId`, `secIdList`, `descAppend`, `tradingClass`, …) |
+| `contract_id`, `isin`, `description`, `bond_type`, `minimum_size`, `size_increment` | IBKR contract details (`conId`, `secIdList`, `descAppend`, `tradingClass`, …) |
 | `annual_coupon`, `maturity` | IBKR's coupon and maturity when present; otherwise read from `descAppend` (`OBL 2 1/2 04/16/31` → 0.025, 2031-04-16) |
 | `currency` | IBKR's contract currency when present; otherwise the `currencyLike` filter; otherwise `None` |
+| `callable` | The scan's `bondCallableIs` argument, which is always sent, so every result is known to be callable or not. IBKR's own callable field was `False` for every bond checked, including 100 the scanner classes as callable, so it is not used |
 | `inflation_linked` | `True` when IBKR flags an index-ratio factor (`evRule` starting with `factor`), e.g. `DBRI` |
 | `legal_entity` | The issuer from the [LEI resolver](lei_resolver.md#get_legal_entity_by_isin): issuer LEI from ESMA FIRDS (or GLEIF), details from GLEIF; at most 4 bonds resolved at a time. `None` when neither register knows the ISIN or the lookup fails (logged as a warning). A 50-bond EUR corporate scan resolved all 50, adding about 15 seconds |
 
@@ -65,22 +72,21 @@ so these are new objects; the input list is unchanged.
 ### `BondFilters`
 ```python
 class BondFilters(TypedDict, total=False):
-    maturityDateAbove: str
-    maturityDateBelow: str
-    bondVarCouponRateIs: Any
+    maturityYearsAbove: int
+    maturityYearsBelow: int
+    bondVarCouponRateIs: bool
     issuerCountryIs: str
     currencyLike: str
     bondCreditRating: str
-    bondCallableIs: Any
-    bondDefaultedIs: Any
-    excludeConvertible: Any
-    bondAmtOutstandingAbove: Any
-    bondInitialSizeAbove: Any
-    bondInitialSizeBelow: Any
+    bondDefaultedIs: bool
+    excludeConvertible: bool
+    bondAmtOutstandingAbove: int
+    bondInitialSizeAbove: int
+    bondInitialSizeBelow: int
 ```
-The typed subset of IBKR filter tags accepted by `interactive_brokers_scan_bonds`. Maturity dates must be `yyyymmdd`:
-IBKR rejects `mm/yyyy` and numbers of years with "Invalid Maturity Date Filter", although its parameters XML lists
-them; `bondAmtOutstanding…` is in millions of face value; `bondCreditRating` is `"highGrade"` or `"highYield"`.
+The typed subset of filter tags accepted by `interactive_brokers_scan_bonds`. `maturityYearsAbove` / `Below` are whole
+years from today; before the scan they are converted to IBKR's `maturityDateAbove` / `Below` (a date from
+[`add_months`](helpers.md#add_months), sent as `YYYYMMDD`, the only date format IBKR accepts for these tags); `bondAmtOutstanding…` is in millions of face value; `bondCreditRating` is `"highGrade"` or `"highYield"`.
 The full list of tags, with units, is in the [tutorial](../research/bond-scanning-europe.md#4-filters).
 
 ### `BondQuote`
@@ -172,17 +178,19 @@ in "(real)" for inflation-linked bonds.
 
 ### `print_bonds`
 ```python
-def print_bonds(bonds: List[Bond], valuation_date: Optional[date] = None) -> None
+def print_bonds(bonds: List[Bond], valuation_date: Optional[date] = None, *, rows: Optional[int] = None) -> None
 ```
-A [`print_bond`](#print_bond) sheet for each bond, separated by a blank line. All sheets use the same valuation date
+A [`print_bond`](#print_bond) sheet for each bond, separated by a blank line; with `max_rows`, only the first
+`max_rows` bonds. All sheets use the same valuation date
 (default `latest_weekday()`).
 
 ### `print_bonds_table`
 ```python
-def print_bonds_table(bonds: List[Bond], valuation_date: Optional[date] = None, *, title: str = "BONDS", has_lei: bool = False) -> None
+def print_bonds_table(bonds: List[Bond], valuation_date: Optional[date] = None, *, title: str = "BONDS", has_lei: bool = False, max_rows: Optional[int] = None) -> None
 ```
-One row per bond, followed by a row count. Columns: Contract ID, Name (`description`), Issuer (the legal name from
-`legal_entity`), ISIN, Clean price, Coupon, Years to maturity, Yield to maturity, Yield, no reinvestment.
+One row per bond, followed by a row count. With `max_rows`, only the first `max_rows` bonds are printed; the title still
+counts every bond, so **BONDS (> 50 instruments)** over `(10 rows)` means the scan found more than you are seeing. Columns: Contract ID, Name (`description`), Issuer (the legal name from
+`legal_entity`), ISIN, Clean price, Coupon, Years to maturity, Yield to maturity, Yield, no reinvestment, Callable (Yes / No).
 
 The title is `title` followed by the number of bonds, e.g. **BONDS (21 instruments)**. At exactly 50, IBKR's scanner
 cap, it reads **(> 50 instruments)**, since more bonds probably matched. With `has_lei=True`, only bonds with a
@@ -199,8 +207,8 @@ ib = await connect()
 try:
   bonds = await interactive_brokers_scan_bonds(ib, instrument="BOND.GOVT.NON-US", location="BOND.GOVT.NON-US",
                                                scan_code="HIGH_BOND_ASK_YIELD_ALL", issuerCountryIs="DE",
-                                               currencyLike="EUR",
-                                               maturityDateAbove="20281002", maturityDateBelow="20311002")
+                                               currencyLike="EUR", bondCallableIs=False,
+                                               maturityYearsAbove=2, maturityYearsBelow=5)
   quoted = await quote_bonds(ib, bonds)
   print_bonds_table(quoted, title="GERMAN GOVERNMENT BONDS")
   print_bond(quoted[0])

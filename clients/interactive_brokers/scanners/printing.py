@@ -28,6 +28,10 @@ def _yield(value: Optional[Decimal]) -> str:
     return f"{value:.{YIELD_DECIMALS}f}%" if value is not None else "-"
 
 
+def _callable(bond: Bond) -> str:
+    return "Yes" if bond.callable else "No"
+
+
 def _source(bond: Bond) -> str:
     if bond.quote is None:
         return "-"
@@ -66,7 +70,7 @@ def print_bond(bond: Bond, valuation_date: Optional[date] = None) -> None:
         [
             ["Payment frequency", "Annual (assumed)"],
             ["Inflation-linked", "Yes" if bond.inflation_linked else "No"],
-            ["Callable", "Yes" if bond.callable else "No"],
+            ["Callable", _callable(bond)],
         ],
         [
             ["Minimum size", format(bond.minimum_size, ",f")],
@@ -86,20 +90,20 @@ def print_bond(bond: Bond, valuation_date: Optional[date] = None) -> None:
     print_grouped_table(["Field", "Value"], groups_, title=bond.description)
 
 
-def print_bonds(bonds: List[Bond], valuation_date: Optional[date] = None) -> None:
+def print_bonds(bonds: List[Bond], valuation_date: Optional[date] = None, *, max_rows: Optional[int] = None) -> None:
     valuation_date_ = valuation_date or latest_weekday()
-    for index_, bond_ in enumerate(bonds):
+    for index_, bond_ in enumerate(bonds[:max_rows]):
         if index_:
             print()
         print_bond(bond_, valuation_date_)
 
 
 def print_bonds_table(bonds: List[Bond], valuation_date: Optional[date] = None, *, title: str = "BONDS",
-                      has_lei: bool = False) -> None:
+                      has_lei: bool = False, max_rows: Optional[int] = None) -> None:
     valuation_date_ = valuation_date or latest_weekday()
     shown_ = [bond_ for bond_ in bonds if not has_lei or bond_.legal_entity is not None]
     headers_: List[str] = ["Contract ID", "Name", "Issuer", "ISIN", "Clean price", "Coupon", "Years to maturity",
-                           "Yield to maturity", "Yield, no reinvestment"]
+                           "Yield to maturity", "Yield, no reinvestment", "Callable"]
     rows_: List[List[str]] = [
         [
             str(bond_.contract_id),
@@ -111,8 +115,9 @@ def print_bonds_table(bonds: List[Bond], valuation_date: Optional[date] = None, 
             format(bond_.years_to_maturity(valuation_date_), ".2f"),
             _yield(bond_.yield_to_maturity(valuation_date_)),
             _yield(bond_.yield_without_reinvestment(valuation_date_)),
+            _callable(bond_),
         ]
-        for bond_ in shown_
+        for bond_ in shown_[:max_rows]
     ]
     count_ = _instrument_count(len(shown_), len(bonds), has_lei)
     print_table(headers_, rows_, first_right_aligned_column=headers_.index("Clean price"), title=f"{title} ({count_})")

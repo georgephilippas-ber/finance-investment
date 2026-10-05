@@ -1,5 +1,5 @@
 from asyncio import Semaphore, gather, to_thread
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from logging import getLogger
 from math import isnan
@@ -22,9 +22,20 @@ async def scan_details(client: IB, instrument: str, location: str, scan_code: st
                        filters: Dict[str, object]) -> List[ContractDetails]:
     subscription_ = ScannerSubscription(instrument=instrument, locationCode=location, scanCode=scan_code,
                                         numberOfRows=rows)
-    tags_ = [TagValue(name_, str(value_)) for name_, value_ in filters.items()]
+    tags_ = [TagValue(name_, _to_tag_value(value_)) for name_, value_ in filters.items()]
     results_ = await client.reqScannerDataAsync(subscription_, scannerSubscriptionFilterOptions=tags_)
     return list(await gather(*(_get_details(client, result_.contractDetails.contract.conId) for result_ in results_)))
+
+
+IBKR_DATE_FORMAT = "%Y%m%d"
+
+
+def _to_tag_value(value: object) -> str:
+    if isinstance(value, bool):
+        return str(value).lower()
+    if isinstance(value, date):
+        return value.strftime(IBKR_DATE_FORMAT)
+    return str(value)
 
 
 async def _get_details(client: IB, contract_id: int) -> ContractDetails:

@@ -72,11 +72,15 @@ transaction taxes are not modelled; check IBKR's current schedule before relying
 
 ### `get_positions`
 ```python
-def get_positions(ib: IB, account: Optional[str] = None) -> List[PortfolioPosition]
+async def get_positions(ib: IB, account: Optional[str] = None, *, timeout: float = 50) -> List[PortfolioPosition]
 ```
 Positions from the session's cached portfolio as [`PortfolioPosition`](domain.md#portfolioposition)s: quantity,
 cost, IBKR market price and value, PnL, unrealized holding-period return, and — from the
-[position tracker](position_tracker.md) — open date and an annualized estimate. There is no extra IBKR request.
+[position tracker](position_tracker.md) — open date and an annualized estimate.
+
+`isin` is filled from IBKR's contract details, one request per position, sent concurrently. Unlike
+`get_positions_as_security_information`, a position whose ISIN cannot be resolved (no or several matching
+contracts, not exactly one ISIN, or a request timeout) gets `isin=None` instead of failing the call.
 
 Annualization uses the quantity-weighted age of the tracked lots, not just the earliest open date. The result
 is `None` if that age is below 365 days, tracked total quantity is nonpositive, HPR is unavailable or at most
@@ -91,7 +95,7 @@ errors are not generally suppressed; see [key behavior](position_tracker.md).
 ```python
 async def get_positions_as_security_information(ib: IB, account: Optional[str] = None, *, timeout: float = 50) -> List[SecurityInformation]
 ```
-The open positions (as `get_positions`, same order) as `Provider.IBKR` [`SecurityInformation`](domain.md#securityinformation)s, with `isin` and `contract_id` filled from IBKR's contract details (one request per position). This is the starting point for [mapping to EODHD](mappings.md).
+The open positions (as `get_positions`, same order) as `Provider.IBKR` [`SecurityInformation`](domain.md#securityinformation)s, with `isin` and `contract_id` filled from IBKR's contract details (one request per position, sent concurrently). This is the starting point for [mapping to EODHD](mappings.md).
 
 Raises `LookupError` if a position has no or several matching contracts, or not exactly one ISIN; the whole call fails rather than returning a partial list.
 
@@ -115,7 +119,7 @@ Amounts are formatted with Babel in the account's currency (`€307.57`): rounde
 def print_positions(positions: List[PortfolioPosition]) -> None
 ```
 Titled **OPEN POSITIONS** in the table's top row.
-Prints one row per position and a row count. Columns: Contract ID, Opened, Symbol, Exchange, Quantity, Total cost, Market price, Market value, Unrealized PnL, Return (`unrealized_hpr`), Annual Return (`unrealized_annualized_return`). Amounts (total cost, market price, market value, unrealized PnL) are formatted like the account summary, in each position's own currency. Missing values are shown as `-`.
+Prints one row per position and a row count. Columns: Contract ID, ISIN, Opened, Symbol, Exchange, Quantity, Total cost, Market price, Market value, Unrealized PnL, Return (`unrealized_hpr`), Annual Return (`unrealized_annualized_return`). Amounts (total cost, market price, market value, unrealized PnL) are formatted like the account summary, in each position's own currency. Missing values are shown as `-`.
 
 ### `print_full_account_information`
 ```python

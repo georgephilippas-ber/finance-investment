@@ -3,23 +3,38 @@ from datetime import date, datetime
 from decimal import Decimal
 from fractions import Fraction
 from logging import getLogger
-from typing import List, Optional, Tuple, Unpack
+from typing import Dict, List, Optional, Tuple, Unpack
 
 from ib_async import IB, ContractDetails
 
+from helpers import add_months
+from settings import MONTHS_PER_YEAR
+
 if __package__:
-    from ._shared import get_isin, get_market_prices, resolve_legal_entities, scan_details
+    from ._shared import IBKR_DATE_FORMAT, get_isin, get_market_prices, resolve_legal_entities, scan_details
     from .domain import PERCENT, SCANNER_ROW_LIMIT, Bond, BondFilters, BondQuote
 else:
-    from _shared import get_isin, get_market_prices, resolve_legal_entities, scan_details
+    from _shared import IBKR_DATE_FORMAT, get_isin, get_market_prices, resolve_legal_entities, scan_details
     from domain import PERCENT, SCANNER_ROW_LIMIT, Bond, BondFilters, BondQuote
 
 __all__ = ["interactive_brokers_scan_bonds", "quote_bonds"]
 
 _logger = getLogger(__name__)
 
-_IBKR_DATE_FORMAT = "%Y%m%d"
 _IBKR_DATE_LENGTH = len("YYYYMMDD")
+_MATURITY_YEARS_TO_DATE_TAGS = {"maturityYearsAbove": "maturityDateAbove", "maturityYearsBelow": "maturityDateBelow"}
+
+
+def _maturity_date_in_years(years: int) -> date:
+    return add_months(date.today(), MONTHS_PER_YEAR * years)
+
+
+def _to_ibkr_filters(filters: BondFilters) -> Dict[str, object]:
+    return {
+        _MATURITY_YEARS_TO_DATE_TAGS.get(name_, name_):
+            _maturity_date_in_years(value_) if name_ in _MATURITY_YEARS_TO_DATE_TAGS else value_
+        for name_, value_ in filters.items()
+    }
 
 
 def _parse_description(description: str) -> Tuple[Decimal, date]:
@@ -31,12 +46,12 @@ def _parse_description(description: str) -> Tuple[Decimal, date]:
     return coupon_, datetime.strptime(maturity_, "%m/%d/%y").date()
 
 
-def _to_bond(details: ContractDetails, currency: Optional[str]) -> Bond:
+def _to_bond(details: ContractDetails, currency: Optional[str], callable_: bool) -> Bond:
     contract_ = details.contract
     currency_ = contract_.currency or currency
     if details.maturity:
         coupon_ = Decimal(str(details.coupon))
-        maturity_ = datetime.strptime(details.maturity[:_IBKR_DATE_LENGTH], _IBKR_DATE_FORMAT).date()
+        maturity_ = datetime.strptime(details.maturity[:_IBKR_DATE_LENGTH], IBKR_DATE_FORMAT).date()
     else:
         coupon_, maturity_ = _parse_description(details.descAppend)
     return Bond(
@@ -48,7 +63,7 @@ def _to_bond(details: ContractDetails, currency: Optional[str]) -> Bond:
         annual_coupon=coupon_ / PERCENT,  # IBKR and descAppend quote coupons in percent
         maturity=maturity_,
         inflation_linked=details.evRule.startswith("factor"),  # index-ratio factor, e.g. DBRI
-        callable=details.callable,
+        callable=callable_,  # IBKR's own callable field is always False
         minimum_size=Decimal(str(details.minSize)),
         size_increment=Decimal(str(details.sizeIncrement)),
     )
@@ -59,15 +74,17 @@ async def interactive_brokers_scan_bonds(
         instrument: str,
         location: str,
         scan_code: str,
+        bondCallableIs: bool,
         rows: int = SCANNER_ROW_LIMIT,
         **filters: Unpack[BondFilters],
 ) -> List[Bond]:
-    details_ = await scan_details(client_, instrument, location, scan_code, rows, dict(filters))
+    tags_ = {**_to_ibkr_filters(filters), "bondCallableIs": bondCallableIs}
+    details_ = await scan_details(client_, instrument, location, scan_code, rows, tags_)
 
     bonds_: List[Bond] = []
     for item_ in details_:
         try:
-            bonds_.append(_to_bond(item_, filters.get("currencyLike")))
+            bonds_.append(_to_bond(item_, filters.get("currencyLike"), bondCallableIs))
         except ValueError:
             _logger.warning(
                 f"Skipping conId {item_.contract.conId}: cannot read coupon/maturity from {item_.descAppend!r}.")

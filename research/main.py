@@ -1,17 +1,10 @@
 from asyncio import run
-from datetime import date
 
 from dotenv import load_dotenv
 
 from clients.interactive_brokers.client import connect, disconnect, print_full_account_information
 from clients.interactive_brokers.scanners.fixed_income import quote_bonds, interactive_brokers_scan_bonds
 from clients.interactive_brokers.scanners.printing import print_bonds_table, print_bond, print_bonds
-from helpers import add_months
-from settings import MONTHS_PER_YEAR
-
-
-def _maturity_date_in_years(years: int) -> str:
-    return add_months(date.today(), MONTHS_PER_YEAR * years).strftime("%Y%m%d")
 
 
 async def _main() -> None:
@@ -27,12 +20,12 @@ async def _main() -> None:
                                                                 scan_code="HIGH_BOND_ASK_YIELD_ALL",
                                                                 currencyLike='EUR',
                                                                 bondCreditRating='highGrade',
-                                                                maturityDateAbove=_maturity_date_in_years(2),
-                                                                maturityDateBelow=_maturity_date_in_years(3),
-                                                                bondCallableIs='false',
-                                                                excludeConvertible='true',
-                                                                bondVarCouponRateIs='false',
-                                                                bondDefaultedIs='false',
+                                                                maturityYearsAbove=2,
+                                                                maturityYearsBelow=3,
+                                                                bondCallableIs=False,
+                                                                excludeConvertible=True,
+                                                                bondVarCouponRateIs=False,
+                                                                bondDefaultedIs=False,
                                                                 bondAmtOutstandingAbove=100,
                                                                 bondInitialSizeAbove=1,
                                                                 bondInitialSizeBelow=1000,
@@ -42,7 +35,28 @@ async def _main() -> None:
         print()
         print_bonds_table(quoted_corporate_, title="EUR INVESTMENT-GRADE CORPORATES, 2-5 YEARS")
         print()
-        print_bonds(quoted_corporate_[:4])
+        print_bonds(quoted_corporate_, max_rows=4)
+
+        bonds_high_yield_ = await interactive_brokers_scan_bonds(ib,
+                                                                 instrument="BOND",
+                                                                 location="BOND.EU.EURONEXT",
+                                                                 scan_code="HIGH_BOND_ASK_YIELD_ALL",
+                                                                 currencyLike='EUR',
+                                                                 bondCreditRating='highYield',
+                                                                 bondCallableIs=True,
+                                                                 maturityYearsAbove=2,
+                                                                 maturityYearsBelow=3,
+                                                                 excludeConvertible=True,
+                                                                 bondVarCouponRateIs=False,
+                                                                 bondDefaultedIs=False,
+                                                                 bondAmtOutstandingAbove=100,
+                                                                 bondInitialSizeAbove=1,
+                                                                 bondInitialSizeBelow=1000,
+                                                                 )
+
+        quoted_high_yield_ = await quote_bonds(ib, bonds_high_yield_)
+        print()
+        print_bonds_table(quoted_high_yield_, title="EUR HIGH-YIELD CORPORATES, 2-3 YEARS", max_rows=10)
 
     finally:
         disconnect(ib)

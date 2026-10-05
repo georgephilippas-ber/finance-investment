@@ -1,4 +1,5 @@
-from asyncio import wait_for
+from asyncio import gather, wait_for
+from dataclasses import replace
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from sqlite3 import OperationalError
@@ -213,27 +214,36 @@ async def _fill_isin(
     return security
 
 
+def _to_security_information(position: PortfolioPosition) -> SecurityInformation:
+    return SecurityInformation(
+        provider=Provider.IBKR,
+        symbol=position.symbol,
+        exchange=position.exchange,
+        currency=position.currency,
+        contract_id=position.contract_id,
+    )
+
+
 async def _positions_to_security_information(
         ib: IB,
         positions: List[PortfolioPosition],
         *,
         timeout: float = configuration.DEFAULT_REQUEST_TIMEOUT,
 ) -> List[SecurityInformation]:
-    return [
-        await _fill_isin(
-            ib,
-            SecurityInformation(
-                provider=Provider.IBKR,
-                symbol=position_.symbol,
-                exchange=position_.exchange,
-                currency=position_.currency,
-                contract_id=position_.contract_id,
-            ),
-            timeout=timeout,
-        )
-        for position_ in positions
-    ]
+    return list(await gather(
+        *(_fill_isin(ib, _to_security_information(position_), timeout=timeout) for position_ in positions)))
 
+
+async def _get_isin(
+        ib: IB,
+        position: PortfolioPosition,
+        *,
+        timeout: float = configuration.DEFAULT_REQUEST_TIMEOUT,
+) -> Optional[str]:
+    try:
+        return (await _fill_isin(ib, _to_security_information(position), timeout=timeout)).isin
+    except (LookupError, TimeoutError):
+        return None
 
 
 async def connect(
@@ -337,7 +347,7 @@ def _get_annualized_return(hpr: Optional[Decimal], days: Optional[Decimal]) -> O
     return (1 + hpr) ** (Decimal(DAYS_PER_YEAR) / days) - 1
 
 
-def get_positions(
+def _to_portfolio_positions(
         ib: IB,
         account: Optional[str] = None,
 ) -> List[PortfolioPosition]:
@@ -366,21 +376,33 @@ def get_positions(
     return positions_
 
 
+async def get_positions(
+        ib: IB,
+        account: Optional[str] = None,
+        *,
+        timeout: float = configuration.DEFAULT_REQUEST_TIMEOUT,
+) -> List[PortfolioPosition]:
+    positions_ = _to_portfolio_positions(ib, account)
+    isins_ = await gather(*(_get_isin(ib, position_, timeout=timeout) for position_ in positions_))
+    return [replace(position_, isin=isin_) for position_, isin_ in zip(positions_, isins_)]
+
+
 async def get_positions_as_security_information(
         ib: IB,
         account: Optional[str] = None,
         *,
         timeout: float = configuration.DEFAULT_REQUEST_TIMEOUT,
 ) -> List[SecurityInformation]:
-    return await _positions_to_security_information(ib, get_positions(ib, account), timeout=timeout)
+    return await _positions_to_security_information(ib, _to_portfolio_positions(ib, account), timeout=timeout)
 
 
 def print_positions(positions: List[PortfolioPosition]) -> None:
-    headers_: List[str] = ["Contract ID", "Opened", "Symbol", "Exchange", "Quantity", "Total cost", "Market price",
+    headers_: List[str] = ["Contract ID", "ISIN", "Opened", "Symbol", "Exchange", "Quantity", "Total cost", "Market price",
                            "Market value", "Unrealized PnL", "Return", "Annual Return"]
     rows_: List[List[str]] = [
         [
             str(position_.contract_id),
+            position_.isin or "-",
             position_.opened.isoformat() if position_.opened is not None else "-",
             position_.symbol,
             position_.exchange,
@@ -445,4 +467,4 @@ async def print_full_account_information(
 ) -> None:
     print_account_information(await get_account_information(ib, account, timeout=timeout))
     print()
-    print_positions(get_positions(ib, account))
+    print_positions(await get_positions(ib, account, timeout=timeout))

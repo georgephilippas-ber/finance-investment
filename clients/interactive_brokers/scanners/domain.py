@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, List, Optional, TypedDict
+from typing import List, Optional, TypedDict
 
 from numpy import array, full
 from scipy.optimize import brentq
@@ -22,18 +22,17 @@ _MAXIMUM_YIELD = 10.0
 
 
 class BondFilters(TypedDict, total=False):
-    maturityDateAbove: str  # YYYYMMDD
-    maturityDateBelow: str  # YYYYMMDD
-    bondVarCouponRateIs: Any
+    maturityYearsAbove: int  # years from today
+    maturityYearsBelow: int
+    bondVarCouponRateIs: bool
     issuerCountryIs: str
     currencyLike: str
     bondCreditRating: str  # "highGrade" or "highYield"
-    bondCallableIs: Any
-    bondDefaultedIs: Any
-    excludeConvertible: Any
-    bondAmtOutstandingAbove: Any  # millions of face value
-    bondInitialSizeAbove: Any
-    bondInitialSizeBelow: Any
+    bondDefaultedIs: bool
+    excludeConvertible: bool
+    bondAmtOutstandingAbove: int  # millions of face value
+    bondInitialSizeAbove: int
+    bondInitialSizeBelow: int
 
 
 @dataclass(frozen=True)

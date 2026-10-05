@@ -50,3 +50,4 @@ class PortfolioPosition:
     opened: Optional[date]
     unrealized_annualized_return: Optional[Decimal]
     contract_id: int
+    isin: Optional[str] = None
